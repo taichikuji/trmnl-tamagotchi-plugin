@@ -1,83 +1,66 @@
 # TRMNLGotchi
 
-Your nostalgic friend on TRMNL!
+A TRMNL plugin that raises a nostalgic P1-style virtual pet. It hatches, eats, plays, sleeps and evolves with an automatic caretaker.
 
-[Source code](https://github.com/taichikuji/trmnl-tamagotchi-plugin) · [Report an issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues)
+## Icon
+
+The listing icon is stored in [media/icon.svg](media/icon.svg) in TRMNL orange (`#E76F55`) and referenced from `settings.yml`. All four title bars reuse the black `svg_logo` captured in `shared.liquid`.
+
+<div align="center">
+  <img src="media/icon.svg" alt="Plugin Icon" width="90">
+</div>
 
 ## Previews
 
+Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
+
 | Full View | Half Horizontal View |
-|---|---|
+|------------|----------------------|
 | ![Full View](media/preview_full.webp) | ![Half Horizontal View](media/preview_half_horizontal.webp) |
 
 | Half Vertical View | Quadrant View |
-|---|---|
+|-------------------|----------------|
 | ![Half Vertical View](media/preview_half_vertical.webp) | ![Quadrant View](media/preview_quadrant.webp) |
 
 | TRMNL X Landscape | TRMNL X Portrait |
-|---|---|
-| ![TRMNL X](media/preview_trmnl_x.webp) | ![TRMNL X Portrait](media/preview_trmnl_x_portrait.webp) |
+|-------------------|------------------|
+| ![TRMNL X Landscape](media/preview_trmnl_x.webp) | ![TRMNL X Portrait](media/preview_trmnl_x_portrait.webp) |
 
-These are local previews of the actual templates using the official TRMNL Framework 3.4.3 stylesheet and fonts. They do not prove hosted or physical-device rendering.
+## Templates
+
+- **transform.js**: Simulation, seeded care, evolution, saved state and original sprite data.
+- **shared.liquid**: Shared black egg logo; styling comes from the native TRMNL framework.
+- **full.liquid**: Centered pet, food, joy and age, with the character, stage and generation in the title bar.
+- **half_horizontal.liquid**: The same information in a shorter horizontal view.
+- **half_vertical.liquid**: Pet and needs with the character name and generation in the title bar.
+- **quadrant.liquid**: Compact pet and needs for the smallest slot.
+
+All four layouts use native Framework 3.4.3 utilities and crisp SVG artwork. Serverless and Saved State keep the simulation inside TRMNL; no external service or runtime dependencies are required.
 
 ## Setup
 
-You need a TRMNL account with the Developer add-on or a BYOD license.
+Create a Private Plugin with **Static** data `{}`, Framework **3.4.3**, **Node** Serverless and a **15-minute** refresh interval. Private plugins require Developer or BYOD access.
 
-### Import
-
-From the repository root, run:
+Generate the import package from the repository root:
 
 ```sh
 python3 scripts/package-import.py
 ```
 
-Select **Plugins → Private Plugins → Import new**, then choose `dist/trmnl-tamagotchi-plugin.zip`. It contains `settings.yml`, the five Liquid files, and `transform.js` directly at the archive root. Do not import GitHub's source archive or the earlier whole-project archive.
+In TRMNL, choose **Plugins → Private Plugins → Import new** and upload `dist/trmnl-tamagotchi-plugin.zip`. This script creates the flat archive TRMNL expects. Upload [media/icon.svg](media/icon.svg) in the plugin settings for the orange listing icon.
 
-The package layout is checked locally. An existing private installation has successfully run Serverless from a scheduled Static refresh; hosted full and horizontal previews were checked through MCP. A fresh import of this exact archive and repeated-refresh persistence still need validation. See [verification progress](../docs/VERIFICATION.md).
+For manual setup, copy the values from [settings.yml](src/settings.yml) into the dashboard, paste [shared.liquid](src/shared.liquid) into Shared and each layout into its matching markup tab. Paste the complete [transform.js](src/transform.js) into **Serverless** and select **Node**.
 
-### Manual setup
+Sleep follows your TRMNL time zone. If necessary, set **Time zone override** to an IANA name such as `Europe/Madrid`. Save, Force Refresh and add the plugin to your playlist.
 
-1. Create a Private Plugin with **Static** strategy and Static Data `{}`. Set its refresh interval to **15 minutes**.
-2. In **Edit Markup → Serverless**, choose **Node** and paste all of [`src/transform.js`](src/transform.js). It includes the simulation and sprites and defines `run(input)`. No other JavaScript file or build step is needed.
-3. Select **Framework 3.4.3**. Paste [`shared.liquid`](src/shared.liquid) into **Shared** and the four corresponding templates into their layout tabs.
-4. Sleep uses `trmnl.user.time_zone_iana`. If unavailable, add the optional string custom field `timezone` from [`settings.yml`](src/settings.yml), e.g. `Europe/Madrid`. Missing metadata later preserves the saved timezone; a new pet with none uses UTC with a reminder.
-5. Save, enable debug logs, and add the plugin to your playlist.
+## Pet behavior
 
-## Layout
+Each generation gets a seeded caretaker. Care history determines evolution, and a new egg appears one simulated hour after death. **Gen 1** is the first generation.
 
-The pet sits in open space, with food, joy, and age directly above the native title bar. Full and horizontal views include the stage and generation beside the character name. Narrow views keep the name and generation. The counter is written as “Gen 1” and increases after each automatic rebirth. Sleep has a visible Z; illness, rebirth countdowns, and configuration warnings appear only when relevant.
-
-Plugin markup uses native framework layout, flex, spacing, sizing, and typography utilities. The banner uses the unmodified `title_bar`, `image`, `title`, and `instance` classes as a sibling of `layout`; its background, borders, height, and fonts come from the framework. There are no custom stylesheets, inline styles, browser scripts, or external artwork requests. SVG artwork uses `shape-rendering="crispEdges"`; hearts are SVG paths so fonts do not change their appearance. Preview-only CSS positions and crops the device canvas and is never included in the plugin ZIP.
-
-## Account-side acceptance checks
-
-- Confirm a first render creates an egg and saves `trmnl.state.version = 1`, `born`, `seed`, and `cursor`.
-- Let **two scheduled 15-minute refreshes** run. `cursor` must advance while the birth timestamp and seed remain stable. Babytchi should appear at the first scheduled refresh.
-- Use **Force Refresh**. It must preserve the life even if previous merge variables are cleared. Rendering twice in one minute must not advance the simulation.
-- Use a mashup from the **same plugin instance**. It must show the same pet. Separate installations have separate lives.
-- Check all four views on OG and X, local sleeping times, debug logs, and any import errors before treating the hosted plugin as validated.
-
-## GitHub publishing workflow
-
-The repository follows the `TRMNL/src` and `TRMNL/media` conventions of the other plugins. **Publish to TRMNL** is manual (`workflow_dispatch`) until a target installation and hosted behavior are validated. It expects repository secrets `TRMNL_API_KEY` and `TRMNL_PLUGIN_SETTING_ID` (the integer in `/plugin_settings/<ID>/edit`). Do not commit either value. A Git push alone does not deploy this prototype to TRMNL.
-
-## Local development
-
-Run `node TRMNL/check.cjs` from the repository root. Node 20+ runs simulation and template checks; Python 3's standard library is used for the import-archive check. No package installation is required.
-
-`node scripts/preview.cjs` starts a dependency-free preview at **http://127.0.0.1:8766**. Its first launch downloads the official framework release and fonts into the ignored `.cache/` directory; subsequent launches work offline. Python 3 is used for this one-time download. The preview provides the native screen and mashup wrappers, including X’s 1.8 physical-pixel scale. The local-only `.cjs` files are development tools; the deployable `src/` contains only `transform.js` as JavaScript.
-
-For TRMNLP, open this folder and run `trmnlp serve`. `.trmnlp.yml` disables the local transform and provides a fixed Mametchi artwork fixture; use the lifecycle preview or hosted plugin to exercise growth. The setting affects local previews only.
-
-## Lifecycle notes
-
-Care and discipline mistakes determine evolution. A fresh caretaker tendency is seeded for each generation. The pet dies according to the modeled P1 conditions and produces another egg one simulated hour later. That interval can pass unseen during downtime.
-
-State advances in elapsed UTC minutes. A run catches up at most 120,000 minutes (~83 days); longer gaps keep their cursor and finish on later refreshes. Invalid state raises an error instead of silently resetting the pet. **Clear Saved State** deliberately starts over; Force Refresh does not.
-
-See the [rules and adaptations](../docs/RULES.md) before describing the prototype as faithful. It is a researched behavior model, not a cycle-accurate firmware emulator. Bandai retains the original artwork; public recipe publication remains deferred.
+Progress follows elapsed time, so changing the refresh frequency does not change care decisions. Force Refresh preserves the pet; **Clear Saved State** starts a new life. See the [rule table](../docs/RULES.md) for the researched rules and adaptations, and [verification progress](../docs/VERIFICATION.md) for the hosted checks completed so far.
 
 ## Trademark and artwork notice
 
-TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. Third-party artwork and trademarks are excluded from this project's MIT license; see [LICENSE](../LICENSE) and the [full notice](../README.md#trademark-and-artwork-notice).
+TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. The MIT license covers original code and documentation; third-party material retains its own terms. See [LICENSE](../LICENSE) and the [full notice](../README.md#trademark-and-artwork-notice).
+
+Public recipe publication remains deferred. For support, [open a GitHub issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues). Local preview, verification and publishing instructions are in the [development guide](../docs/DEVELOPMENT.md).

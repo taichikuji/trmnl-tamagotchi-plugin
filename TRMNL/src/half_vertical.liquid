@@ -13,7 +13,7 @@
   <span class="label label--small {{ pet.notice_visibility | escape }}">{{ pet.notice | escape }}</span>
 </div>
 <div class="title_bar">
-  <svg class="image" width="24" height="24" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges"><path d="{{ pet.logo_path | escape }}" fill="currentColor"/></svg>
+  <img class="image" width="24" height="24" src="data:image/svg+xml;base64,{{ svg_logo | base64_encode }}" alt="">
   <span class="title">{{ pet.name | escape }}</span>
   <span class="instance">Gen {{ pet.generation | escape }}</span>
 </div>

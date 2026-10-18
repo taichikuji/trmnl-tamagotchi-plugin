@@ -36,10 +36,16 @@ function render(options = {}, state) {
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
-  // Templates intentionally use only escaped field interpolation, so this is also an exact local renderer.
-  const content = markup.replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
-  if (/{[{%]/.test(content)) throw Error('Unsupported Liquid syntax in preview');
-  const shared = fs.readFileSync(path.join(src,'shared.liquid'),'utf8').replace(/{% comment %}[\s\S]*?{% endcomment %}/g, '');
+  // Render the shared logo capture/base64 filter and escaped fields used by the templates.
+  const sharedSource = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
+  const capture = /{%-?\s*capture svg_logo\s*-?%}([\s\S]*?){%-?\s*endcapture\s*-?%}/;
+  const logo = sharedSource.match(capture)?.[1].trim();
+  const shared = sharedSource.replace(capture,'').replace(/{% comment %}[\s\S]*?{% endcomment %}/g,'');
+  const content = markup.replace(/{{\s*svg_logo\s*\|\s*base64_encode\s*}}/g, () => {
+    if (!logo) throw Error('Missing shared logo capture');
+    return Buffer.from(logo).toString('base64');
+  }).replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
+  if (/{[{%]/.test(shared+content)) throw Error('Unsupported Liquid syntax in preview');
   const screenClass = device === 'og' ? 'screen--og screen--1bit' : `screen--v2 screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
   const mashup = {half_horizontal:'1Tx1B',half_vertical:'1Lx1R',quadrant:'2x2'}[layout];
   const view = `<div class="view view--${layout}">${content}</div>`;

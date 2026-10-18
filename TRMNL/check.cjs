@@ -236,6 +236,22 @@ test('plugin layouts use native framework components without custom CSS or brows
   assert.match(render().html,/\/framework\/css\/plugins.css/);
 });
 
+test('title bars share the black egg and the listing icon uses TRMNL orange',()=>{
+  const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
+  const icon=fs.readFileSync(path.join(root,'TRMNL/media/icon.svg'),'utf8');
+  assert.match(shared,/{%- capture svg_logo -%}/);
+  assert.match(icon,/width="512" height="512"/);
+  assert.match(icon,/fill="#E76F55"/);
+  assert.equal((icon.match(/<path /g)||[]).length,1);
+  const egg=icon.match(/<path d="([^"]+)"/)[1];
+  for(const layout of layouts) {
+    const html=render({layout}).html;
+    const svg=Buffer.from(html.match(/src="data:image\/svg\+xml;base64,([^"]+)"/)[1],'base64').toString();
+    assert.match(svg,/fill="#000000"/);
+    assert.equal(svg.match(/<path d="([^"]+)"/)[1],egg);
+  }
+});
+
 test('renderer escapes data and sleep/death indicators remain distinct',()=>{
   const sick=render({character:'mametchi',mood:'sick'}); assert.match(sick.html,/Under the weather/);
   const sleeping=render({character:'mametchi',mood:'sleeping'}); assert.match(sleeping.html,/Sound asleep/);
@@ -262,10 +278,11 @@ test('the flat import ZIP includes and executes its standalone Serverless script
   try {
     const zipPath=path.join(temp,'plugin.zip');
     execFileSync('python3',[path.join(root,'scripts/package-import.py'),zipPath]);
-    const inspect='import json,sys,zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n assert z.testzip() is None\n print(json.dumps({"names": z.namelist(), "source": z.read("transform.js").decode()}))';
+    const inspect='import json,sys,zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n assert z.testzip() is None\n print(json.dumps({"names": z.namelist(), "source": z.read("transform.js").decode(), "settings": z.read("settings.yml").decode()}))';
     const archive=JSON.parse(execFileSync('python3',['-c',inspect,zipPath],{encoding:'utf8'}));
     assert.deepEqual(archive.names.sort(),['full.liquid','half_horizontal.liquid','half_vertical.liquid','quadrant.liquid','settings.yml','shared.liquid','transform.js'].sort());
     assert.equal(archive.source,source);
+    assert.doesNotMatch(archive.settings,/^icon:/m);
     const hosted=vm.createContext({Intl,Date});
     vm.runInContext(archive.source,hosted);
     const initial=hosted.run({trmnl:{state:{},system:{timestamp_utc:start*60},user:{time_zone_iana:'Europe/Madrid'}}});

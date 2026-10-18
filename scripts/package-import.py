@@ -16,7 +16,12 @@ output = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else root / 'dist/trmnl-
 output.parent.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name in names:
-        archive.write(src / name, name)
+        if name == 'settings.yml':
+            # The listing icon is uploaded separately, outside the flat plugin archive.
+            settings = (src / name).read_text().replace('icon: media/icon.svg\n', '')
+            archive.writestr(name, settings)
+        else:
+            archive.write(src / name, name)
 with zipfile.ZipFile(output) as archive:
     assert archive.testzip() is None
     assert set(archive.namelist()) == set(names)
