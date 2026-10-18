@@ -1,4 +1,4 @@
-# TRMNLGotchi
+# trmnl-tamagotchi-plugin
 
 Your nostalgic friend on TRMNL!
 
