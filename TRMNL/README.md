@@ -16,7 +16,7 @@ An autonomous P1-style companion for your e-ink screen.
 |---|---|
 | ![TRMNL X](media/preview_trmnl_x.webp) | ![TRMNL X Portrait](media/preview_trmnl_x_portrait.webp) |
 
-These are local-shell previews of the actual templates. They do not prove hosted or physical-device rendering.
+These are local previews of the actual templates using the official TRMNL Framework 3.4.3 stylesheet and fonts. They do not prove hosted or physical-device rendering.
 
 ## Setup
 
@@ -38,9 +38,15 @@ The package layout is checked locally. Actual hosted import and execution remain
 
 1. Create a Private Plugin with **Static** strategy and Static Data `{}`. Set its refresh interval to **15 minutes**.
 2. In **Edit Markup → Serverless**, choose **Node** and paste all of [`src/transform.js`](src/transform.js). It includes the simulation and sprites and defines `run(input)`. No other JavaScript file or build step is needed.
-3. Paste [`shared.liquid`](src/shared.liquid) into **Shared** and the four corresponding templates into their layout tabs.
+3. Select **Framework 3.4.3**. Paste [`shared.liquid`](src/shared.liquid) into **Shared** and the four corresponding templates into their layout tabs.
 4. Sleep uses `trmnl.user.time_zone_iana`. If unavailable, add the optional string custom field `timezone` from [`settings.yml`](src/settings.yml), e.g. `Europe/Madrid`. Missing metadata later preserves the saved timezone; a new pet with none uses UTC with a reminder.
 5. Save, enable debug logs, and add the plugin to your playlist.
+
+## Layout
+
+The pet sits in open space, with food, joy, and age directly above the native title bar. Full and horizontal views include the stage and generation beside the character name. Narrow views keep the name and generation. The counter is written as “Gen 1” and increases after each automatic rebirth. Sleep has a visible Z; illness, rebirth countdowns, and configuration warnings appear only when relevant.
+
+Plugin markup uses native framework layout, flex, spacing, sizing, and typography utilities. The banner uses the unmodified `title_bar`, `image`, `title`, and `instance` classes as a sibling of `layout`; its background, borders, height, and fonts come from the framework. There are no custom stylesheets, inline styles, browser scripts, or external artwork requests. SVG artwork uses `shape-rendering="crispEdges"`; hearts are SVG paths so fonts do not change their appearance. Preview-only CSS positions and crops the device canvas and is never included in the plugin ZIP.
 
 ## Account-side acceptance checks
 
@@ -58,7 +64,7 @@ The repository follows the `TRMNL/src` and `TRMNL/media` conventions of the othe
 
 Run `node TRMNL/check.cjs` from the repository root. Node 20+ runs simulation and template checks; Python 3's standard library is used for the import-archive check. No package installation is required.
 
-`node scripts/preview.cjs` opens a dependency-free preview at **http://127.0.0.1:8766**. The local-only `.cjs` files are development tools; the deployable `src/` contains only `transform.js` as JavaScript.
+`node scripts/preview.cjs` starts a dependency-free preview at **http://127.0.0.1:8766**. Its first launch downloads the official framework release and fonts into the ignored `.cache/` directory; subsequent launches work offline. Python 3 is used for this one-time download. The preview provides the native screen and mashup wrappers, including X’s 1.8 physical-pixel scale. The local-only `.cjs` files are development tools; the deployable `src/` contains only `transform.js` as JavaScript.
 
 For TRMNLP, open this folder and run `trmnlp serve`. `.trmnlp.yml` disables the local transform and provides a fixed Mametchi artwork fixture; use the lifecycle preview or hosted plugin to exercise growth. The setting affects local previews only.
 

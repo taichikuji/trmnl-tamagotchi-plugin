@@ -1,4 +1,4 @@
-// Offline, dependency-free preview of the actual Liquid markup and Serverless code.
+// Dependency-free preview (caches the official framework on first launch) of the actual Liquid markup and Serverless code.
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
@@ -9,6 +9,8 @@ const context = vm.createContext({ Date, Intl });
 vm.runInContext(fs.readFileSync(path.join(src, 'transform.js'), 'utf8'), context);
 const characters = vm.runInContext('P1_NAMES', context);
 const devices = { og: [800,480], x: [1872,1404], portrait: [1404,1872] };
+const frameworkVersion = '3.4.3';
+const assetRoot = path.join(root, '.cache/framework', frameworkVersion);
 const layouts = ['full','half_horizontal','half_vertical','quadrant'];
 const base = Date.parse('2026-10-18T09:00:00Z') / 60000;
 const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -27,18 +29,25 @@ function render(options = {}, state) {
   const device = devices[options.device] ? options.device : 'og';
   const layout = layouts.includes(options.layout) ? options.layout : 'full';
   const [dw,dh] = devices[device];
-  const width = layout === 'half_vertical' || layout === 'quadrant' ? dw / 2 - 8 : dw;
-  const height = layout === 'half_horizontal' || layout === 'quadrant' ? dh / 2 - 8 : dh;
+  const scale = device === 'og' ? 1 : 1.8;
+  const [lw,lh] = [dw / scale,dh / scale];
+  const width = layout === 'full' ? dw : (layout === 'half_vertical' || layout === 'quadrant' ? (lw - 20) / 2 - 5 : lw - 20) * scale;
+  const height = layout === 'full' ? dh : (layout === 'half_horizontal' || layout === 'quadrant' ? (lh - 20) / 2 - 5 : lh - 20) * scale;
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
   // Templates intentionally use only escaped field interpolation, so this is also an exact local renderer.
   const content = markup.replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
   if (/{[{%]/.test(content)) throw Error('Unsupported Liquid syntax in preview');
-  const styles = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
+  const shared = fs.readFileSync(path.join(src,'shared.liquid'),'utf8').replace(/{% comment %}[\s\S]*?{% endcomment %}/g, '');
+  const screenClass = device === 'og' ? 'screen--og screen--1bit' : `screen--v2 screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
+  const mashup = {half_horizontal:'1Tx1B',half_vertical:'1Lx1R',quadrant:'2x2'}[layout];
+  const view = `<div class="view view--${layout}">${content}</div>`;
+  const surface = mashup ? `<div class="mashup mashup--${mashup}">${view}</div>` : view;
   const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>${escape(pet.name)} · TRMNL preview</title>
-<style>html,body{margin:0;padding:0;width:${width}px;height:${height}px;background:#fff;color:#000;font-family:Arial,sans-serif} .screen{width:100%;height:100%;padding:12px;box-sizing:border-box}.view{width:100%;height:100%}</style>
-${styles}<body><div class="screen"><div class="view view--${layout}">${content}</div></div></body></html>`;
+<link rel="stylesheet" href="/framework/css/plugins.css">
+<style>/* Preview host only: clip one native view from the device canvas. */ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:white} .screen{position:absolute;left:${layout === 'full' ? 0 : -10 * scale}px;top:${layout === 'full' ? 0 : -10 * scale}px}</style>
+${shared}<body class="trmnl"><div class="screen ${screenClass}">${surface}</div></body></html>`;
   return {html,width,height,pet};
 }
 const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tamagotchi · TRMNL preview</title>
@@ -62,6 +71,12 @@ function server() {
   return http.createServer(async (req,res) => {
     const url=new URL(req.url,'http://localhost');
     try {
+      const asset = url.pathname === '/framework/css/plugins.css' ? 'css/plugins.css' :
+        /^\/fonts\/[\w.-]+$/.test(url.pathname) ? url.pathname.slice(1) : null;
+      if(req.method==='GET' && asset) {
+        res.setHeader('Content-Type',asset.endsWith('.css') ? 'text/css' : 'font/woff2');
+        res.end(fs.readFileSync(path.join(assetRoot,asset)));return;
+      }
       if(req.method==='GET' && url.pathname==='/') {res.setHeader('Content-Type','text/html; charset=utf-8');res.end(app);return;}
       if(req.method==='GET' && url.pathname==='/screen') {res.setHeader('Content-Type','text/html; charset=utf-8');res.end(render(Object.fromEntries(url.searchParams)).html);return;}
       if(req.method==='POST' && url.pathname==='/render') {
@@ -79,5 +94,8 @@ function server() {
     }catch(error){res.writeHead(400,{'Content-Type':'text/plain'});res.end(error.message);}
   });
 }
-if(require.main===module) server().listen(8766,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8766'));
+if(require.main===module) {
+  require('node:child_process').execFileSync('python3',[path.join(__dirname,'preview-assets.py'),assetRoot,frameworkVersion],{stdio:'inherit'});
+  server().listen(8766,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8766'));
+}
 module.exports={render,fixture,server,devices,layouts};

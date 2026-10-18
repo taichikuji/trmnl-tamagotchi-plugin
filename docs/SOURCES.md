@@ -35,3 +35,10 @@ The implementation follows your `TRMNL/src/` structure, `transform.js` naming an
 - [LaLiga](https://github.com/taichikuji/trmnl-laliga-plugin) and [TMB](https://github.com/taichikuji/trmnl-tmb-plugin): source/layout and preview organization.
 
 No changes were made to those reference repositories. Hosted TRMNL validation and public recipe publication remain pending.
+
+## Display framework
+
+- [TRMNL framework guidance](https://github.com/usetrmnl/trmnl-agent-skills): native components and utilities, platform-owned screen/view wrappers, and size-specific content.
+- [Structure](https://trmnl.com/framework/docs/3.4/structure): one `layout` per view, with the standard `title_bar` as its sibling. Screen, mashup, and view wrappers belong to the platform.
+- [Title bar](https://trmnl.com/framework/docs/3.4/title_bar), [size utilities](https://trmnl.com/framework/docs/3.4/size), and [screen](https://trmnl.com/framework/docs/3.4/screen): layout/title-bar siblings, native device dimensions, and pixel scaling.
+- [Official Framework 3.4.3 release](https://github.com/usetrmnl/trmnl-framework/releases/tag/v3.4.3): pinned for plugin settings and cached locally by the preview. Framework assets and fonts are development cache files, not plugin runtime dependencies.

@@ -300,11 +300,22 @@ function displayPet(s, now, warning = '') {
   const status = dead ? 'Resting among the stars' : !s.character ? 'A little life is on its way' :
     s.sleeping ? 'Sound asleep' : s.sick ? 'Under the weather' :
     s.activity_until >= s.cursor ? s.activity : s.hunger === 0 ? 'Ready for a meal' : s.happiness === 0 ? 'A little bored' : 'Enjoying the day';
+  // Pixel hearts avoid font-dependent Unicode rendering on OG and X.
+  const heartPath = value => Array.from({length: 4}, (_, i) => {
+    const x = i * 9;
+    const outline = `M${x+1} 1h2v1h2V1h2v1h1v2h-1v1h-1v1h-1v1h-2V6h-1V5h-1V4h-1V2h1z`;
+    const hollow = `M${x+1} 2h2v1h2V2h2v2h-1v1h-1v1h-2V5h-1V4h-1z`;
+    return outline + (i < Math.ceil(value / 4) ? '' : hollow);
+  }).join('');
+  const notice = catchup ? `Catching up · ${Math.ceil((now-s.cursor)/1440)} days remaining` : warning ||
+    (dead ? `New egg in ${Math.max(0, 60 - (s.cursor - s.dead_at))}m` : s.sick ? 'Under the weather' : '');
   return { name: dead ? 'Until next time' : names[s.character], character: id,
     stage: dead ? 'REBIRTH' : !s.character ? 'EGG' : s.character === 1 ? 'BABY' : s.character === 2 ? 'CHILD' : s.character < 5 ? 'TEEN' : 'ADULT',
-    generation: String(s.generation).padStart(2, '0'),
+    generation: String(s.generation),
     age: age < 60 ? `${age}m` : age < 1440 ? `${Math.floor(age/60)}h ${age%60}m` : `${Math.floor(age/1440)}d ${Math.floor(age%1440/60)}h`,
     food: hearts(s.hunger), joy: hearts(s.happiness), status,
+    food_path: heartPath(s.hunger), joy_path: heartPath(s.happiness),
+    logo_path: P1_SPRITES.egg[0], notice, notice_visibility: notice ? 'visible' : 'hidden',
     caretaker: P1_PROFILES[s.profile], frame, sprite_path: P1_SPRITES[id][frame],
     sprite_transform: `translate(${8 + offset} 4)`, sleep_path: s.sleeping ? P1_SPRITES.sleep : '',
     state_class: s.sleeping ? 'is-sleeping' : dead ? 'is-dead' : '',

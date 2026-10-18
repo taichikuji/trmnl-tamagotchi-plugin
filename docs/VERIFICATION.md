@@ -13,9 +13,10 @@ Run `node TRMNL/check.cjs` from the repository root with Node 20+ and Python 3. 
 - `TRMNL/src` contains exactly one JavaScript file, `transform.js`, with embedded sprites and no runtime imports.
 - The actual generated ZIP has exactly seven root-level files. Its own `transform.js` is executed in isolation to initialize an egg and resume the same life as Babytchi.
 - Plugin settings use Static input, Node, a 15-minute interval and a description within the hosted 35-character limit.
+- Plugin templates are checked for native layout/title-bar structure, crisp SVG artwork, and absence of custom CSS, inline styles, or browser scripts.
 - Template checks cover 468 device/layout/character/condition combinations, plus escaping and sleeping/death indications.
 
-The original local browser inspection covered all twelve OG/X landscape/X portrait layout combinations, including the longest character name, with no measured layout overflow. Representative captures are in `TRMNL/media/`. These are local-shell renders, not hosted or physical-device screenshots.
+Local browser inspection uses the official Framework 3.4.3 release and its own fonts, device scale, view, and mashup wrappers. All twelve OG/X landscape/X portrait layout combinations were checked with the longest character name, with no measured content overflow. Sleep, illness, egg, and rebirth also received compact-slot visual checks. Representative captures are in `TRMNL/media/`. These are local framework renders; hosted and physical-device rendering remain unverified.
 
 ## Hosted validation remains pending
 

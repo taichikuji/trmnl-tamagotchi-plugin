@@ -220,6 +220,22 @@ test('all device/layout/character states render the actual templates without mis
     }
   }
 });
+test('plugin layouts use native framework components without custom CSS or browser scripts',()=>{
+  const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
+  for(const layout of layouts) {
+    const markup=fs.readFileSync(path.join(root,'TRMNL/src',layout+'.liquid'),'utf8');
+    assert.doesNotMatch(shared+markup,/<style|\bstyle\s*=|<script|!important/i);
+    assert.equal((markup.match(/class="layout /g)||[]).length,1);
+    assert.match(markup,/<\/div>\s*<div class="title_bar">/);
+    assert.match(markup,/<span class="title">[^<]+<\/span>\s*<span class="instance">[^<]+<\/span>/);
+    assert.match(markup,/shape-rendering="crispEdges"/);
+    assert.match(markup,/Food: {{ pet.food \| escape }}/);
+    assert.match(markup,/Joy: {{ pet.joy \| escape }}/);
+  }
+  assert.match(render().html,/class="trmnl"/);
+  assert.match(render().html,/\/framework\/css\/plugins.css/);
+});
+
 test('renderer escapes data and sleep/death indicators remain distinct',()=>{
   const sick=render({character:'mametchi',mood:'sick'}); assert.match(sick.html,/Under the weather/);
   const sleeping=render({character:'mametchi',mood:'sleeping'}); assert.match(sleeping.html,/Sound asleep/);
