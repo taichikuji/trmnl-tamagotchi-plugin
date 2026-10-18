@@ -1,0 +1,357 @@
+{
+  "source": "https://github.com/agg23/tamagotchi-disassembled/blob/master/tama.asm",
+  "sha256": "66ee3a17a5e5a14b94fdd738d6064fdc062de778e3c7aade2d761d2a70827f12",
+  "stats": {
+    "babytchi": {
+      "wake": 255,
+      "sleep": 255,
+      "hungry": 3,
+      "happy": 4,
+      "sickness": 45,
+      "medicine": 12,
+      "min_weight": 5,
+      "max_weight": 5,
+      "evolution": 60,
+      "discipline_calls": 15,
+      "discipline": 0,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 0,
+      "unused": 0,
+      "address": "0x1564"
+    },
+    "marutchi": {
+      "wake": 9,
+      "sleep": 20,
+      "hungry": 50,
+      "happy": 60,
+      "sickness": 990,
+      "medicine": 12,
+      "min_weight": 16,
+      "max_weight": 153,
+      "evolution": 1380,
+      "discipline_calls": 6,
+      "discipline": 0,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 0,
+      "unused": 0,
+      "address": "0x1571"
+    },
+    "tamatchi": {
+      "wake": 9,
+      "sleep": 21,
+      "hungry": 75,
+      "happy": 85,
+      "sickness": 1656,
+      "medicine": 12,
+      "min_weight": 32,
+      "max_weight": 153,
+      "evolution": 2220,
+      "discipline_calls": 6,
+      "discipline": 0,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x157e"
+    },
+    "kuchitamatchi": {
+      "wake": 9,
+      "sleep": 21,
+      "hungry": 75,
+      "happy": 85,
+      "sickness": 660,
+      "medicine": 12,
+      "min_weight": 32,
+      "max_weight": 153,
+      "evolution": 1380,
+      "discipline_calls": 6,
+      "discipline": 0,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 0,
+      "unused": 0,
+      "address": "0x158b"
+    },
+    "mametchi": {
+      "wake": 9,
+      "sleep": 22,
+      "hungry": 81,
+      "happy": 91,
+      "sickness": 3900,
+      "medicine": 8,
+      "min_weight": 48,
+      "max_weight": 153,
+      "evolution": 4095,
+      "discipline_calls": 15,
+      "discipline": 15,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x1598"
+    },
+    "ginjirotchi": {
+      "wake": 9,
+      "sleep": 22,
+      "hungry": 81,
+      "happy": 91,
+      "sickness": 2808,
+      "medicine": 8,
+      "min_weight": 48,
+      "max_weight": 153,
+      "evolution": 3120,
+      "discipline_calls": 7,
+      "discipline": 8,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x15a5"
+    },
+    "maskutchi": {
+      "wake": 11,
+      "sleep": 23,
+      "hungry": 55,
+      "happy": 65,
+      "sickness": 2592,
+      "medicine": 8,
+      "min_weight": 48,
+      "max_weight": 153,
+      "evolution": 2880,
+      "discipline_calls": 7,
+      "discipline": 0,
+      "game": 11,
+      "win_delay": 3,
+      "loss_delay": 2,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x15b2"
+    },
+    "kuchipatchi": {
+      "wake": 9,
+      "sleep": 22,
+      "hungry": 60,
+      "happy": 70,
+      "sickness": 1170,
+      "medicine": 12,
+      "min_weight": 32,
+      "max_weight": 153,
+      "evolution": 1560,
+      "discipline_calls": 15,
+      "discipline": 15,
+      "game": 5,
+      "win_delay": 3,
+      "loss_delay": 4,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x15bf"
+    },
+    "nyorotchi": {
+      "wake": 9,
+      "sleep": 22,
+      "hungry": 60,
+      "happy": 70,
+      "sickness": 360,
+      "medicine": 13,
+      "min_weight": 16,
+      "max_weight": 153,
+      "evolution": 780,
+      "discipline_calls": 7,
+      "discipline": 8,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 0,
+      "unused": 0,
+      "address": "0x15cc"
+    },
+    "tarakotchi": {
+      "wake": 10,
+      "sleep": 22,
+      "hungry": 45,
+      "happy": 50,
+      "sickness": 660,
+      "medicine": 12,
+      "min_weight": 32,
+      "max_weight": 153,
+      "evolution": 1440,
+      "discipline_calls": 7,
+      "discipline": 0,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x15d9"
+    },
+    "bill": {
+      "wake": 9,
+      "sleep": 22,
+      "hungry": 81,
+      "happy": 91,
+      "sickness": 3900,
+      "medicine": 8,
+      "min_weight": 48,
+      "max_weight": 153,
+      "evolution": 4095,
+      "discipline_calls": 15,
+      "discipline": 15,
+      "game": 8,
+      "win_delay": 1,
+      "loss_delay": 1,
+      "bites": 1,
+      "unused": 0,
+      "address": "0x1598"
+    }
+  },
+  "charts": [
+    [
+      [
+        0,
+        0,
+        1,
+        2
+      ]
+    ],
+    [
+      [
+        3,
+        3,
+        5,
+        4
+      ],
+      [
+        3,
+        0,
+        4,
+        4
+      ],
+      [
+        0,
+        3,
+        3,
+        3
+      ],
+      [
+        0,
+        0,
+        2,
+        3
+      ]
+    ],
+    [
+      [
+        3,
+        4,
+        15,
+        10
+      ],
+      [
+        3,
+        2,
+        15,
+        9
+      ],
+      [
+        3,
+        0,
+        15,
+        8
+      ],
+      [
+        0,
+        2,
+        15,
+        7
+      ],
+      [
+        0,
+        1,
+        15,
+        6
+      ],
+      [
+        0,
+        0,
+        15,
+        5
+      ]
+    ],
+    [
+      [
+        4,
+        8,
+        15,
+        10
+      ],
+      [
+        4,
+        0,
+        15,
+        9
+      ],
+      [
+        0,
+        2,
+        6,
+        7
+      ],
+      [
+        0,
+        0,
+        15,
+        6
+      ]
+    ],
+    [
+      [
+        0,
+        3,
+        15,
+        10
+      ],
+      [
+        0,
+        2,
+        15,
+        9
+      ],
+      [
+        0,
+        0,
+        15,
+        8
+      ]
+    ],
+    [
+      [
+        0,
+        6,
+        15,
+        10
+      ],
+      [
+        0,
+        0,
+        15,
+        9
+      ]
+    ],
+    [
+      [
+        0,
+        0,
+        15,
+        11
+      ]
+    ]
+  ]
+}

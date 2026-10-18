@@ -1,0 +1,31 @@
+<div class="layout tama-layout">
+  <section class="tama tama--quadrant {{ pet.state_class | escape }}" aria-label="Autonomous Tamagotchi">
+    <div class="tama-body">
+      <header class="tama-header">
+        <span class="tama-brand">TAMAGOTCHI</span>
+        <span class="tama-generation">GEN {{ pet.generation | escape }}</span>
+      </header>
+      <div class="tama-heading">
+        <h1 class="tama-name">{{ pet.name | escape }}</h1>
+        <span class="tama-stage">{{ pet.stage | escape }}</span>
+      </div>
+      <div class="tama-room">
+        <svg class="tama-scene" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" xmlns="http://www.w3.org/2000/svg">
+          <g transform="{{ pet.sprite_transform | escape }}"><path d="{{ pet.sprite_path | escape }}" fill="currentColor"/></g>
+          <g transform="translate(24 1)"><path d="{{ pet.sleep_path | escape }}" fill="currentColor"/></g>
+        </svg>
+        <div class="tama-floor"></div>
+      </div>
+      <div class="tama-stats">
+        <div class="tama-stat"><span class="tama-label">FOOD</span><span class="tama-hearts" aria-label="Food: {{ pet.food | escape }}">{{ pet.food | escape }}</span></div>
+        <div class="tama-stat"><span class="tama-label">JOY</span><span class="tama-hearts" aria-label="Joy: {{ pet.joy | escape }}">{{ pet.joy | escape }}</span></div>
+        <span class="tama-age">{{ pet.age | escape }}</span>
+      </div>
+      <footer class="tama-footer">
+        <span class="tama-status">{{ pet.status | escape }}</span>
+        <span class="tama-extra">{{ pet.next_event | escape }}</span>
+        <span class="tama-warning">{{ pet.warning | escape }}</span>
+      </footer>
+    </div>
+  </section>
+</div>

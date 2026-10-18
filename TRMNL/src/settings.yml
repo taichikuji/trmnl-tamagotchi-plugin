@@ -1,0 +1,15 @@
+---
+name: Autonomous Tamagotchi
+description: Autonomous P1 virtual pet
+strategy: static
+static_data: '{}'
+no_screen_padding: 'no'
+dark_mode: 'no'
+framework_version: 3.1.1
+serverless_language: node
+refresh_interval: 15
+custom_fields:
+- keyname: timezone
+  name: Time zone override (optional IANA name, e.g. Europe/Madrid)
+  field_type: string
+  optional: true

@@ -147,3 +147,11 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# TRMNL local builds, import archives, and development configuration
+_build/
+*.zip
+__pycache__/
+*.py[cod]
+*.local.*
+bin/trmnlp
