@@ -15,9 +15,7 @@ custom_fields:
   field_type: author_bio
   category: life
   description: |
-    <p>Created by Ivan Perez. TRMNLGotchi brings a nostalgic P1-style virtual pet to your TRMNL. It hatches, eats, plays, sleeps, and evolves according to its care history. A seeded caretaker looks after each generation, and a new egg follows the end of each life.</p>
-    <p>Runs entirely inside TRMNL with Serverless, Saved State, and Liquid. Supports TRMNL OG and X, portrait orientation, and all four layouts.</p>
-    <p>This is an unofficial fan project made out of nostalgia. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. Not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. All rights reserved by their respective owners.</p>
-    <p>Questions or bugs? <a href="https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues">Report an issue on GitHub</a>.</p>
+    <p>Created by Ivan Perez. TRMNLGotchi is a low-maintenance 'gotchi' virtual pet for your TRMNL!</p>
+    <p>Tamagotchi is a trademark of BANDAI Co., Ltd. This is an unofficial, unaffiliated project with open-source code. All rights reserved by their respective owners.</p>
   github_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin
   learn_more_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup

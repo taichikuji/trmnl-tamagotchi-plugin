@@ -31,6 +31,8 @@ Checked against the private installation through its plugin MCP key on 2026-10-1
 
 Earlier read-only MCP snapshots show `trmnl.user.time_zone_iana = Europe/Madrid` in both global variables and Serverless input, matching the saved zone. This confirms availability in those snapshots, not consistency on every initial and scheduled run. During issue #1 implementation, the saved MCP key returned HTTP 401; no new hosted runtime checks were possible. The owner requested deployment through the repository's GitHub Action. Initial-install and repeated scheduled-refresh metadata checks remain pending.
 
+The issue #1 implementation (`77fa474`) passed all 26 local checks and its [Publish to TRMNL run](https://github.com/taichikuji/trmnl-tamagotchi-plugin/actions/runs/39131513217) completed successfully. A follow-up check on 2026-10-18 reran all 26 checks successfully; the private dashboard redirected to sign-in, so live initial-install and scheduled-refresh behavior remains unconfirmed. Issue #1 stays open pending that hosted criterion.
+
 The connection exposes the name as writable, but not the plugin description. The chosen description is present in the local settings and import ZIP; it has not been verified on the live plugin.
 
 Still pending: two successive scheduled refreshes advancing the same saved life, Force Refresh persistence, hosted renders of every OG/X layout and orientation, and physical-device inspection. The regenerated flat ZIP is checked locally; a fresh import of that exact archive has not been observed. Follow the acceptance steps in `TRMNL/README.md` for the remaining checks.
