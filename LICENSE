@@ -27,3 +27,8 @@ It does not cover Bandai's original Tamagotchi artwork, including the embedded
 P1_SPRITES pixel data in TRMNL/src/transform.js and rendered artwork in
 TRMNL/media/. Those retain their original copyright and terms. No license to
 Bandai ROMs, firmware, artwork or trademarks is granted by this repository.
+
+Tamagotchi is a trademark of BANDAI Co., Ltd. Related character names, logos,
+likenesses and original artwork belong to BANDAI. All rights reserved by their
+respective owners. TRMNLGotchi is an unofficial fan project and is not
+affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco.

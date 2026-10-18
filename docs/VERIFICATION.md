@@ -16,10 +16,18 @@ Run `node TRMNL/check.cjs` from the repository root with Node 20+ and Python 3. 
 - Plugin templates are checked for native layout/title-bar structure, crisp SVG artwork, and absence of custom CSS, inline styles, or browser scripts.
 - Template checks cover 468 device/layout/character/condition combinations, plus escaping and sleeping/death indications.
 
-Local browser inspection uses the official Framework 3.4.3 release and its own fonts, device scale, view, and mashup wrappers. All twelve OG/X landscape/X portrait layout combinations were checked with the longest character name, with no measured content overflow. Sleep, illness, egg, and rebirth also received compact-slot visual checks. Representative captures are in `TRMNL/media/`. These are local framework renders; hosted and physical-device rendering remain unverified.
+Local browser inspection uses the official Framework 3.4.3 release and its own fonts, device scale, view, and mashup wrappers. All twelve OG/X landscape/X portrait layout combinations were checked with the longest character name, with no measured content overflow. Sleep, illness, egg, and rebirth also received compact-slot visual checks. Representative captures are in `TRMNL/media/`. These are local framework renders; physical-device rendering remains unverified.
 
-## Hosted validation remains pending
+## Hosted validation progress
 
-The earlier whole-project ZIP did not match TRMNL's flat import format. `scripts/package-import.py` now generates the documented layout, and the checks verify its contents and standalone execution locally. That does not prove the hosted importer, Serverless VM or scheduler accepts and executes it.
+Checked against the private installation through its plugin MCP key on 2026-10-18:
 
-After account access is available, follow the acceptance steps in `TRMNL/README.md`: import, inspect errors, wait for two scheduled refreshes, verify Saved State survives Force Refresh, and check all device/layout combinations. Do not treat a local check or Git push as proof of hosted behavior.
+- The plugin reports healthy with Static input `{}`, Node Serverless, and Framework 3.4.3.
+- A scheduled refresh log records an HTTP 200 Serverless response, exit code 0, and 19 ms execution. It generated an egg and saved version 1 lifecycle state.
+- The live name is `TRMNLGotchi`. Full and horizontal banner updates were read back and match the local templates exactly.
+- Hosted screenshots of those two layouts render the egg, centered joy indicator, age, native banner, and generation label.
+- Saved generation, birth timestamp, and simulation cursor remain unchanged after the name and markup updates.
+
+The connection exposes the name as writable, but not the plugin description. The chosen description is present in the local settings and import ZIP; it has not been verified on the live plugin.
+
+Still pending: two successive scheduled refreshes advancing the same saved life, Force Refresh persistence, hosted renders of every OG/X layout and orientation, and physical-device inspection. The regenerated flat ZIP is checked locally; a fresh import of that exact archive has not been observed. Follow the acceptance steps in `TRMNL/README.md` for the remaining checks.

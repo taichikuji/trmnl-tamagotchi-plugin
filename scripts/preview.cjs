@@ -44,15 +44,15 @@ function render(options = {}, state) {
   const mashup = {half_horizontal:'1Tx1B',half_vertical:'1Lx1R',quadrant:'2x2'}[layout];
   const view = `<div class="view view--${layout}">${content}</div>`;
   const surface = mashup ? `<div class="mashup mashup--${mashup}">${view}</div>` : view;
-  const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>${escape(pet.name)} · TRMNL preview</title>
+  const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>${escape(pet.name)} · TRMNLGotchi preview</title>
 <link rel="stylesheet" href="/framework/css/plugins.css">
 <style>/* Preview host only: clip one native view from the device canvas. */ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:white} .screen{position:absolute;left:${layout === 'full' ? 0 : -10 * scale}px;top:${layout === 'full' ? 0 : -10 * scale}px}</style>
 ${shared}<body class="trmnl"><div class="screen ${screenClass}">${surface}</div></body></html>`;
   return {html,width,height,pet};
 }
-const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tamagotchi · TRMNL preview</title>
+const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>TRMNLGotchi · preview</title>
 <style>*{box-sizing:border-box}body{margin:0;background:#f3f3ef;color:#161813;font:14px system-ui,sans-serif}.toolbar{padding:24px 28px;background:#fff;border-bottom:1px solid #d8dad2;display:flex;flex-wrap:wrap;align-items:end;gap:16px}.heading{margin-right:auto}.heading h1{font-size:20px;margin:0 0 6px}.heading p{margin:0;color:#555}label{display:grid;gap:6px;font-size:12px}select,button,input{font:inherit;background:white;border:1px solid #aaa;border-radius:5px;padding:9px}button{cursor:pointer}button:hover{background:#e7e9df}.simulation{display:flex;align-items:center;gap:10px;padding:15px 28px;flex-wrap:wrap}.simulation span{margin-right:auto;color:#555}.preview-wrap{padding:18px 28px;overflow:hidden}.preview-frame{position:relative;margin:auto;box-shadow:0 8px 32px #0002;border:1px solid #d0d2c9;background:#fff}iframe{display:block;border:0;transform-origin:top left}details{margin:15px 28px}pre{background:white;padding:18px;white-space:pre-wrap;font-size:12px}footer{margin:20px 28px;color:#555;font-size:12px}</style>
-<div class="toolbar"><div class="heading"><h1>A little life, on your TRMNL.</h1><p>Original P1 artwork · autonomous care · private prototype</p></div>
+<div class="toolbar"><div class="heading"><h1>TRMNLGotchi</h1><p>Your nostalgic friend on TRMNL!</p></div>
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
 <label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='mametchi'?'selected':''}>${x}</option>`).join('')}</select></label>

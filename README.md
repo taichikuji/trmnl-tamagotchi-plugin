@@ -1,6 +1,8 @@
-# trmnl-tamagotchi-plugin
+# TRMNLGotchi
 
-A TRMNL Tamagotchi plugin to display your new nostalgic friend!
+Your nostalgic friend on TRMNL!
+
+[Source code](https://github.com/taichikuji/trmnl-tamagotchi-plugin) · [Setup](https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup) · [Report an issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues)
 
 An unattended P1-style pet that hatches, eats, plays, sleeps, grows through care-based evolution paths, and starts another generation after death. Uses TRMNL Serverless and Saved State; no external service or runtime dependencies.
 
@@ -14,7 +16,7 @@ An unattended P1-style pet that hatches, eats, plays, sleeps, grows through care
 
 ## Setup
 
-See [plugin setup and previews](TRMNL/README.md). Hosted import, Serverless execution and saved-state persistence still need validation against a TRMNL account.
+See [plugin setup and previews](TRMNL/README.md). A private installation has been checked through MCP: a scheduled Static refresh ran Serverless successfully and saved initial state. Repeated scheduled refreshes and Force Refresh persistence still need verification; see [verification progress](docs/VERIFICATION.md).
 
 ## Local development
 
@@ -45,4 +47,8 @@ The archive is `dist/trmnl-tamagotchi-plugin.zip`. GitHub's **Download ZIP** con
 - [TRMNL Serverless](https://help.trmnl.com/en/articles/14130649-serverless)
 - [TRMNL import format](https://help.trmnl.com/en/articles/10542599-importing-and-exporting-private-plugins)
 
-Original implementation code is MIT licensed. Bandai's original artwork and its rendered screenshots retain their own terms; see [LICENSE](LICENSE). No ROM or firmware source is included. Public TRMNL recipe publication is deferred.
+## Trademark and artwork notice
+
+TRMNLGotchi is an unofficial fan project made out of nostalgia. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters, logos, and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. See [BANDAI's official Tamagotchi IP information](https://tamagotchi-official.com/us/anti-counterfeiting/).
+
+The MIT license covers this project's original implementation code and documentation. It does not license third-party artwork or trademarks; see [LICENSE](LICENSE). No ROM or firmware source is included. Public TRMNL recipe publication remains deferred.

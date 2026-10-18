@@ -1,6 +1,8 @@
-# Tamagotchi for TRMNL
+# TRMNLGotchi
 
-An autonomous P1-style companion for your e-ink screen.
+Your nostalgic friend on TRMNL!
+
+[Source code](https://github.com/taichikuji/trmnl-tamagotchi-plugin) · [Report an issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues)
 
 ## Previews
 
@@ -32,7 +34,7 @@ python3 scripts/package-import.py
 
 Select **Plugins → Private Plugins → Import new**, then choose `dist/trmnl-tamagotchi-plugin.zip`. It contains `settings.yml`, the five Liquid files, and `transform.js` directly at the archive root. Do not import GitHub's source archive or the earlier whole-project archive.
 
-The package layout is checked locally. Actual hosted import and execution remain unverified until account-side testing.
+The package layout is checked locally. An existing private installation has successfully run Serverless from a scheduled Static refresh; hosted full and horizontal previews were checked through MCP. A fresh import of this exact archive and repeated-refresh persistence still need validation. See [verification progress](../docs/VERIFICATION.md).
 
 ### Manual setup
 
@@ -75,3 +77,7 @@ Care and discipline mistakes determine evolution. A fresh caretaker tendency is 
 State advances in elapsed UTC minutes. A run catches up at most 120,000 minutes (~83 days); longer gaps keep their cursor and finish on later refreshes. Invalid state raises an error instead of silently resetting the pet. **Clear Saved State** deliberately starts over; Force Refresh does not.
 
 See the [rules and adaptations](../docs/RULES.md) before describing the prototype as faithful. It is a researched behavior model, not a cycle-accurate firmware emulator. Bandai retains the original artwork; public recipe publication remains deferred.
+
+## Trademark and artwork notice
+
+TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. Third-party artwork and trademarks are excluded from this project's MIT license; see [LICENSE](../LICENSE) and the [full notice](../README.md#trademark-and-artwork-notice).
