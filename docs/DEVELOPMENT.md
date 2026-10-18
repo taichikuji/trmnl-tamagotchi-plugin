@@ -33,11 +33,13 @@ See [verification coverage and hosted progress](VERIFICATION.md) for completed a
 
 Each view contains one native `layout` and a sibling `title_bar`. Layout, grid, flex, spacing, sizing and typography use framework utilities. There are no custom stylesheets, inline styles or browser scripts in the plugin templates.
 
-SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. The shared `svg_logo` capture supplies a black egg as an inline SVG image to every title bar; `TRMNL/media/icon.svg` supplies the same artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and configuration warnings appear when relevant.
+SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. The shared `svg_logo` capture supplies a black egg as an inline SVG image to every title bar; `TRMNL/media/icon.svg` supplies the same artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
 
 ## State and time
 
-Sleep uses `trmnl.user.time_zone_iana`, with the optional `timezone` field as an override. A missing time zone on a new installation uses UTC and displays a reminder. Missing metadata on later refreshes preserves the saved time zone.
+Sleep automatically uses a valid `trmnl.user.time_zone_iana`. Missing, blank or invalid metadata preserves the saved time zone. Only a new instance with neither uses UTC; `timezone_fallback` keeps an unobtrusive warning visible across refreshes and rebirth until valid account metadata arrives. An account explicitly set to UTC does not show that warning.
+
+Existing version 1 state remains supported. The removed custom field is ignored, including any leftover value on an existing installation. Elapsed time is processed in the previous saved zone before adopting the current account zone for future minutes, even when catch-up spans multiple runs. Birth time, seed, generation, needs and care history are preserved. Duplicate timestamps do not advance life; older timestamps cannot change the saved zone. For an older UTC state with no provenance or account metadata, show the warning until the account confirms its zone. No UTC-offset approximation is used for DST.
 
 The simulation advances in elapsed UTC minutes. Catch-up is bounded at 120,000 minutes per run, retaining the cursor for subsequent refreshes when a gap is longer. Invalid state raises an error rather than silently resetting the pet. Force Refresh preserves the life; Clear Saved State deliberately starts over.
 
@@ -45,6 +47,7 @@ See [rules and adaptations](RULES.md) before describing the simulation as faithf
 
 ## Hosted acceptance checks
 
+- Confirm a fresh install has no time zone field. Inspect Serverless input for `trmnl.user.time_zone_iana` on its first render and subsequent scheduled refreshes; verify the saved zone matches the account. Do not clear an existing pet to perform this check.
 - Confirm the first render creates an egg and saves `trmnl.state.version = 1`, `born`, `seed` and `cursor`.
 - Allow two scheduled 15-minute refreshes. The cursor must advance while the birth timestamp and seed remain stable; Babytchi should appear at the first scheduled refresh.
 - Use Force Refresh and confirm the same life is preserved, including when previous merge variables are cleared. Rendering twice in one minute must not advance the simulation.
@@ -53,7 +56,7 @@ See [rules and adaptations](RULES.md) before describing the simulation as faithf
 
 ## GitHub publishing workflow
 
-**Publish to TRMNL** uses `workflow_dispatch`. It remains manual while repeated-refresh persistence and the remaining hosted checks are pending. A Git push does not deploy the plugin.
+**Publish to TRMNL** runs manually with `workflow_dispatch` and automatically on pushes to `main` that change plugin source, media or the workflow itself. Such a push deploys the plugin to the configured private installation.
 
 Configure repository secrets `TRMNL_API_KEY` and `TRMNL_PLUGIN_SETTING_ID`. The latter is the installed plugin number in `/plugin_settings/<ID>/edit`. The workflow needs a TRMNL account API key; a plugin MCP key is a separate credential. Keep credentials out of the repository.
 

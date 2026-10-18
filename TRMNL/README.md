@@ -51,7 +51,7 @@ In TRMNL, choose **Plugins → Private Plugins → Import new** and upload `dist
 
 For manual setup, copy the values from [settings.yml](src/settings.yml) into the dashboard, paste [shared.liquid](src/shared.liquid) into Shared and each layout into its matching markup tab. Paste the complete [transform.js](src/transform.js) into **Serverless** and select **Node**.
 
-Sleep follows your TRMNL time zone. If necessary, set **Time zone override** to an IANA name such as `Europe/Madrid`. Save, Force Refresh and add the plugin to your playlist.
+Save, Force Refresh and add the plugin to your playlist. Sleep follows your TRMNL account time zone automatically; no time zone input is needed. If TRMNL temporarily omits it, the pet keeps its saved time zone. A new installation without usable time zone metadata displays **Time zone unavailable · sleep uses UTC** until account metadata becomes available.
 
 ## Pet behavior
 

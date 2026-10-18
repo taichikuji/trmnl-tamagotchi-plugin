@@ -64,7 +64,7 @@ This package **does not claim full ROM or cycle accuracy**. It verifies and impl
 - Infant food and happiness start at the original value 1. The caretaker's first actions happen one minute after hatching. Baby sleep is represented by its awake-minute countdown and five sleeping ticks.
 - A new egg automatically follows death after one simulated hour, even when the ROM would require a reset or qualify egg behavior differently. Death can pass unseen during downtime.
 - Poses are display illustrations sampled from original character sprite tables, not a reproduction of the ROM animation sequencer. A sleeping pet stays in one position with the original sleep Z; it does not walk. No continuous animation occurs on the device.
-- IANA timezone rules govern local sleep. A timezone setting change applies after catching up old elapsed time in the previous saved timezone. If no IANA name exists, UTC is visibly indicated until configured. No historical DST reconstruction is attempted from a lone current UTC offset.
+- IANA timezone rules govern local sleep. An account timezone change applies after catching up old elapsed time in the previous saved timezone. Missing or invalid account metadata retains the saved zone. A new installation with neither uses UTC and shows a warning until account metadata is available. No historical DST reconstruction is attempted from a lone current UTC offset.
 - A single run processes at most 120,000 elapsed minutes, preserving the cursor for later catch-up rather than skipping life events. No unbounded event history is stored.
 
 Keep these limits visible when describing the prototype. Changes to the model require rerunning the branch, replay and timezone checks before replacing the installed Serverless script.

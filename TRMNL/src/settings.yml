@@ -10,10 +10,6 @@ framework_version: 3.4.3
 serverless_language: node
 refresh_interval: 15
 custom_fields:
-- keyname: timezone
-  name: Time zone override (optional IANA name, e.g. Europe/Madrid)
-  field_type: string
-  optional: true
 - keyname: plugin_info
   name: About This Plugin
   field_type: author_bio

@@ -239,6 +239,7 @@ function validateState(s) {
   if (!s.due || Array.isArray(s.due) || Object.entries(s.due).some(([k,v]) => !P1_TASKS.includes(k) || !integer(v, s.born, 1e10))) {
     throw new Error('Invalid pending care');
   }
+  if (s.timezone_fallback !== undefined && typeof s.timezone_fallback !== 'boolean') throw new Error('Invalid timezone fallback');
   if (s.discipline_phase !== undefined && !integer(s.discipline_phase, 0, 15)) throw new Error('Invalid discipline phase');
 }
 function localClock(timezone) {
@@ -285,7 +286,7 @@ function timestampMinute(input) {
   if (!Number.isFinite(ms) || ms < 0 || ms > 8640000000000000) throw new Error('Invalid TRMNL UTC timestamp');
   return Math.floor(ms / 60000);
 }
-function displayPet(s, now, warning = '') {
+function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailable · sleep uses UTC' : '') {
   const names = ['Egg', 'Babytchi', 'Marutchi', 'Tamatchi', 'Kuchitamatchi', 'Mametchi',
     'Ginjirotchi', 'Maskutchi', 'Kuchipatchi', 'Nyorotchi', 'Tarakotchi', 'Bill'];
   const dead = s.dead_at !== null;
@@ -307,7 +308,9 @@ function displayPet(s, now, warning = '') {
     const hollow = `M${x+1} 2h2v1h2V2h2v2h-1v1h-1v1h-2V5h-1V4h-1z`;
     return outline + (i < Math.ceil(value / 4) ? '' : hollow);
   }).join('');
-  const notice = catchup ? `Catching up · ${Math.ceil((now-s.cursor)/1440)} days remaining` : warning ||
+  const progress = catchup ? `Catching up · ${Math.ceil((now-s.cursor)/1440)} days remaining` : '';
+  const reminder = [progress, warning].filter(Boolean).join(' · ');
+  const notice = reminder ||
     (dead ? `New egg in ${Math.max(0, 60 - (s.cursor - s.dead_at))}m` : s.sick ? 'Under the weather' : '');
   return { name: dead ? 'Until next time' : names[s.character], character: id,
     stage: dead ? 'REBIRTH' : !s.character ? 'EGG' : s.character === 1 ? 'BABY' : s.character === 2 ? 'CHILD' : s.character < 5 ? 'TEEN' : 'ADULT',
@@ -319,28 +322,34 @@ function displayPet(s, now, warning = '') {
     caretaker: P1_PROFILES[s.profile], frame, sprite_path: P1_SPRITES[id][frame],
     sprite_transform: `translate(${8 + offset} 4)`, sleep_path: s.sleeping ? P1_SPRITES.sleep : '',
     state_class: s.sleeping ? 'is-sleeping' : dead ? 'is-dead' : '',
-    warning: catchup ? `Catching up · ${Math.ceil((now-s.cursor)/1440)} days remaining` : warning,
+    warning: reminder,
     updated_at: new Date(s.cursor * 60000).toISOString(),
     next_event: dead ? `New egg in ${Math.max(0, 60 - (s.cursor - s.dead_at))}m` :
       s.sleeping ? 'Dreams in progress' : !s.character ? `Hatching in ${s.timers.hatch}m` : `${P1_PROFILES[s.profile]} caretaker` };
 }
 function run(input = {}) {
   const now = timestampMinute(input);
-  const fields = input?.trmnl?.plugin_settings?.custom_fields_values || {};
   const previous = input?.trmnl?.state;
-  const timezone = String(fields.timezone || input?.trmnl?.user?.time_zone_iana || previous?.timezone || 'UTC').trim();
-  // Invalid explicit timezone fails safely; saved state is never silently reset.
-  localClock(timezone);
+  let accountTimezone;
+  const metadata = input?.trmnl?.user?.time_zone_iana;
+  if (typeof metadata === 'string' && metadata.trim()) {
+    try { localClock(metadata.trim()); accountTimezone = metadata.trim(); }
+    catch { /* Missing or unusable metadata must not discard a saved timezone. */ }
+  }
+  const timezone = accountTimezone || previous?.timezone || 'UTC';
   let s;
   if (previous === undefined || (previous && typeof previous === 'object' && !Array.isArray(previous) && Object.keys(previous).length === 0)) {
     const install = input?.trmnl?.plugin_settings?.id ?? input?.trmnl?.user?.plugin_setting_id;
     const seed = install === undefined ? Math.floor(Math.random() * 4294967296) : hashSeed(`${install}:${now}`);
     s = newLife(seed, now, timezone);
   } else s = advance(previous, now);
-  // Catch up in the old timezone before applying a changed device setting to future minutes.
-  if (s.cursor >= now) s.timezone = timezone;
-  const warning = !fields.timezone && !input?.trmnl?.user?.time_zone_iana && !previous?.timezone ? 'UTC · set a time zone for local sleep' : '';
-  const result = { pet: displayPet(s, now, warning), trmnl_state: s };
+  // Catch up in the saved timezone before adopting account time for future minutes.
+  // Older UTC states have no provenance; warn until account metadata confirms the zone.
+  if (s.cursor === now) {
+    s.timezone = timezone;
+    s.timezone_fallback = !accountTimezone && (previous?.timezone_fallback ?? timezone === 'UTC');
+  } else if (s.timezone_fallback === undefined) s.timezone_fallback = s.timezone === 'UTC';
+  const result = { pet: displayPet(s, now), trmnl_state: s };
   // State is ASCII, so JSON length also equals its UTF-8 byte count.
   if (JSON.stringify(s).length > 8192) throw new Error('Saved state exceeds TRMNL limit');
   return result;

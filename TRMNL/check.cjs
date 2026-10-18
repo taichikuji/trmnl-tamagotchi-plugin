@@ -170,16 +170,82 @@ test('Serverless initializes empty state, survives cleared merge variables and c
   assert.ok(ctx.displayPet(awake,start).sleep_path);
 });
 test('bad state, version, timestamps and timezone fail without mutating saved data', () => {
-  for(const previous of [null,[],{version:99},{...fresh(),hunger:-1},{...fresh(),timers:{}}]) {
+  for(const previous of [null,[],{version:99},{...fresh(),hunger:-1},{...fresh(),timers:{}},{...fresh(),timezone:'Mars/Olympus'},{...fresh(),timezone_fallback:'yes'}]) {
     const before=JSON.stringify(previous);
     assert.throws(()=>ctx.run({trmnl:{state:previous,system:{timestamp_utc:start*60}}}));
     assert.equal(JSON.stringify(previous),before);
   }
   assert.throws(()=>ctx.run({trmnl:{system:{timestamp_utc:'bad'}}}));
-  assert.throws(()=>ctx.run({trmnl:{plugin_settings:{custom_fields_values:{timezone:'Mars/Olympus'}}}}));
   assert.equal(ctx.timestampMinute({trmnl:{system:{timestamp_utc:'2026-10-18T10:00:00Z'}}}),start);
   assert.equal(ctx.timestampMinute({trmnl:{system:{timestamp_utc:String(start*60)}}}),start);
-  assert.match(ctx.run({trmnl:{system:{timestamp_utc:start*60}}}).pet.warning,/set a time zone/);
+  assert.match(ctx.run({trmnl:{system:{timestamp_utc:start*60}}}).pet.warning,/Time zone unavailable/);
+});
+test('account timezone is automatic, ignores the removed override and survives missing or invalid metadata', () => {
+  const result=ctx.run({trmnl:{state:{},system:{timestamp_utc:start*60},plugin_settings:{id:123,custom_fields_values:{timezone:'America/New_York'}},user:{time_zone_iana:' Europe/Madrid '}}});
+  assert.equal(result.trmnl_state.timezone,'Europe/Madrid');
+  assert.equal(result.trmnl_state.timezone_fallback,false);
+  assert.equal(result.pet.warning,'');
+  for(const zone of [undefined,null,'','  ','Mars/Olympus',123,{}]) {
+    const before=clean(result.trmnl_state);
+    const next=ctx.run({trmnl:{state:before,user:{time_zone_iana:zone},system:{timestamp_utc:(start+15)*60}}});
+    assert.deepEqual(clean(next.trmnl_state),clean(ctx.advance(before,start+15)));
+    assert.deepEqual(before,clean(result.trmnl_state));
+    assert.equal(next.pet.warning,'');
+  }
+  const initial=clean(result.trmnl_state);
+  let frequent=initial;
+  for(let t=start+15;t<=start+3*1440;t+=15) {
+    frequent=clean(ctx.run({trmnl:{state:frequent,system:{timestamp_utc:t*60},user:{time_zone_iana:t%30 ? 'Europe/Madrid' : undefined}}}).trmnl_state);
+  }
+  const delayed=ctx.run({trmnl:{state:initial,system:{timestamp_utc:(start+3*1440)*60}}});
+  assert.deepEqual(frequent,clean(delayed.trmnl_state));
+  const legacy=fresh(); // Version 1 state before timezone_fallback existed.
+  const resumed=ctx.run({trmnl:{state:legacy,system:{timestamp_utc:start*60}}});
+  assert.deepEqual(clean(resumed.trmnl_state),{...legacy,timezone_fallback:false});
+});
+test('UTC fallback stays visible across refreshes and rebirth, and clears only with valid metadata', () => {
+  for(const zone of [undefined,null,'','  ','Mars/Olympus',123,{}]) {
+    const first=ctx.run({trmnl:{state:{},user:{time_zone_iana:zone},system:{timestamp_utc:start*60},plugin_settings:{id:123}}});
+    assert.equal(first.trmnl_state.timezone,'UTC');
+    assert.equal(first.trmnl_state.timezone_fallback,true);
+    const dead=clean(first.trmnl_state); ctx.die(dead,'Test rebirth');
+    const next=ctx.run({trmnl:{state:dead,system:{timestamp_utc:(start+60)*60}}});
+    assert.equal(next.trmnl_state.generation,2);
+    assert.equal(next.trmnl_state.timezone_fallback,true);
+    assert.match(next.pet.notice,/Time zone unavailable · sleep uses UTC/);
+    assert.equal(next.pet.notice_visibility,'visible');
+    const recovered=ctx.run({trmnl:{state:next.trmnl_state,user:{time_zone_iana:'UTC'},system:{timestamp_utc:(start+60)*60}}});
+    assert.equal(recovered.trmnl_state.timezone_fallback,false);
+    assert.equal(recovered.pet.warning,'');
+    assert.equal(ctx.run({trmnl:{state:recovered.trmnl_state,system:{timestamp_utc:(start+75)*60}}}).pet.warning,'');
+  }
+  const legacy=fresh(42,start,'UTC');
+  assert.match(ctx.run({trmnl:{state:legacy,system:{timestamp_utc:start*60}}}).pet.warning,/sleep uses UTC/);
+});
+test('timezone changes catch up the old life before adopting account time, including sleep, DST and stale timestamps', () => {
+  for(const iso of ['2026-10-18T17:59Z','2026-10-24T17:59Z','2026-03-28T18:59Z']) {
+    const previous=hatched(); previous.cursor=Date.parse(iso)/60000; previous.born=previous.cursor-100;
+    const target=previous.cursor+15*60;
+    const expected=clean(ctx.advance(previous,target));
+    const result=ctx.run({trmnl:{state:previous,system:{timestamp_utc:target*60},user:{time_zone_iana:'America/New_York'},plugin_settings:{custom_fields_values:{timezone:'Europe/Madrid'}}}});
+    assert.deepEqual(clean(result.trmnl_state),{...expected,timezone:'America/New_York',timezone_fallback:false});
+    const duplicate=ctx.run({trmnl:{state:result.trmnl_state,system:{timestamp_utc:target*60},user:{time_zone_iana:'America/New_York'}}});
+    assert.deepEqual(clean(duplicate.trmnl_state),clean(result.trmnl_state));
+    const stale=ctx.run({trmnl:{state:result.trmnl_state,system:{timestamp_utc:(target-1)*60},user:{time_zone_iana:'Asia/Tokyo'}}});
+    assert.deepEqual(clean(stale.trmnl_state),clean(result.trmnl_state));
+    const next=ctx.run({trmnl:{state:result.trmnl_state,system:{timestamp_utc:(target+15)*60}}});
+    assert.deepEqual(clean(next.trmnl_state),clean(ctx.advance(result.trmnl_state,target+15)));
+  }
+});
+test('capped catch-up retains the saved zone until all elapsed minutes have been processed', () => {
+  const previous=fresh(); const target=start+120015;
+  const input={system:{timestamp_utc:target*60},user:{time_zone_iana:'Asia/Tokyo'}};
+  const partial=ctx.run({trmnl:{...input,state:previous}});
+  assert.equal(partial.trmnl_state.cursor,start+120000);
+  assert.equal(partial.trmnl_state.timezone,'Europe/Madrid');
+  const complete=ctx.run({trmnl:{...input,state:partial.trmnl_state}});
+  const expected=clean(ctx.advance(previous,target,120015));
+  assert.deepEqual(clean(complete.trmnl_state),{...expected,timezone:'Asia/Tokyo',timezone_fallback:false});
 });
 test('long catch-up retains cursor and stays inside state/runtime limits', () => {
   const initial=fresh(); const before=performance.now();
@@ -254,6 +320,7 @@ test('title bars share the black egg and the listing icon uses TRMNL orange',()=
 
 test('renderer escapes data and sleep/death indicators remain distinct',()=>{
   const sick=render({character:'mametchi',mood:'sick'}); assert.match(sick.html,/Under the weather/);
+  const unavailable=render({mood:'timezone-unavailable'}); assert.match(unavailable.html,/Time zone unavailable · sleep uses UTC/);
   const sleeping=render({character:'mametchi',mood:'sleeping'}); assert.match(sleeping.html,/Sound asleep/);
   assert.ok(sleeping.pet.sleep_path.length>0);
   const dead=render({character:'dead'}); assert.match(dead.html,/Until next time/); assert.match(dead.html,/New egg in 60m/);
@@ -270,6 +337,7 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^serverless_language: node$/m);
   assert.match(settings,/^refresh_interval: 15$/m);
   assert.ok(!/^id:/m.test(settings));
+  assert.doesNotMatch(settings,/keyname: timezone|Time zone override/);
 });
 test('the flat import ZIP includes and executes its standalone Serverless script', () => {
   const os=require('node:os');
@@ -282,7 +350,7 @@ test('the flat import ZIP includes and executes its standalone Serverless script
     const archive=JSON.parse(execFileSync('python3',['-c',inspect,zipPath],{encoding:'utf8'}));
     assert.deepEqual(archive.names.sort(),['full.liquid','half_horizontal.liquid','half_vertical.liquid','quadrant.liquid','settings.yml','shared.liquid','transform.js'].sort());
     assert.equal(archive.source,source);
-    assert.doesNotMatch(archive.settings,/^icon:/m);
+    assert.doesNotMatch(archive.settings,/^icon:|keyname: timezone/m);
     const hosted=vm.createContext({Intl,Date});
     vm.runInContext(archive.source,hosted);
     const initial=hosted.run({trmnl:{state:{},system:{timestamp_utc:start*60},user:{time_zone_iana:'Europe/Madrid'}}});

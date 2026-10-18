@@ -23,6 +23,7 @@ function fixture(character = 'mametchi', mood = 'awake', seed = 42) {
   if (character === 'dead') context.die(s, 'Reached the end of this life');
   if (mood === 'sleeping') s.sleeping = true;
   if (mood === 'sick') s.sick = true;
+  if (mood === 'timezone-unavailable') { s.timezone = 'UTC'; s.timezone_fallback = true; }
   return s;
 }
 function render(options = {}, state) {
@@ -62,7 +63,7 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
 <label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='mametchi'?'selected':''}>${x}</option>`).join('')}</select></label>
-<label>Pose state<select id="mood"><option value="awake">Awake</option><option value="sleeping">Sleeping</option><option value="sick">Unwell</option></select></label></div>
+<label>Pose state<select id="mood"><option value="awake">Awake</option><option value="sleeping">Sleeping</option><option value="sick">Unwell</option><option value="timezone-unavailable">Time zone unavailable</option></select></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
 <main class="preview-wrap"><div class="preview-frame" id="holder"><iframe id="screen" title="TRMNL display"></iframe></div></main>
 <details><summary>Saved state and recent events</summary><pre id="state"></pre></details>

@@ -8,7 +8,8 @@ Run `node TRMNL/check.cjs` from the repository root with Node 20+ and Python 3. 
 - Evolution thresholds, sleep, midnight, waking, illness, discipline, aging, death, and rebirth are exercised.
 - Minute, 15-minute, irregular, and daily refresh schedules produce the same lifecycle.
 - IANA timezone checks include European and half-hour Australian daylight-saving transitions.
-- Saved state survives cleared previous merge variables and missing timezone metadata. Invalid state fails without replacement.
+- Saved state survives cleared previous merge variables and missing or invalid timezone metadata. Removed override values are ignored; old version 1 lives resume without resetting. Account zone changes apply only after catch-up, including DST and capped multi-run gaps.
+- UTC fallback warnings persist across refreshes and rebirth, clear on valid account metadata, and remain absent for confirmed UTC accounts. Invalid state fails without replacement.
 - Catch-up is bounded at 120,000 elapsed minutes per run and retains progress for longer gaps. State and display payload sizes are checked.
 - `TRMNL/src` contains exactly one JavaScript file, `transform.js`, with embedded sprites and no runtime imports.
 - The actual generated ZIP has exactly seven root-level files. Its own `transform.js` is executed in isolation to initialize an egg and resume the same life as Babytchi.
@@ -27,6 +28,8 @@ Checked against the private installation through its plugin MCP key on 2026-10-1
 - The live name is `TRMNLGotchi`. Full and horizontal banner updates were read back and match the local templates exactly.
 - Hosted screenshots of those two layouts render the egg, centered joy indicator, age, native banner, and generation label.
 - Saved generation, birth timestamp, and simulation cursor remain unchanged after the name and markup updates.
+
+Earlier read-only MCP snapshots show `trmnl.user.time_zone_iana = Europe/Madrid` in both global variables and Serverless input, matching the saved zone. This confirms availability in those snapshots, not consistency on every initial and scheduled run. During issue #1 implementation, the saved MCP key returned HTTP 401; no new hosted runtime checks were possible. The owner requested deployment through the repository's GitHub Action. Initial-install and repeated scheduled-refresh metadata checks remain pending.
 
 The connection exposes the name as writable, but not the plugin description. The chosen description is present in the local settings and import ZIP; it has not been verified on the live plugin.
 
