@@ -5,10 +5,10 @@
       <g transform="translate(24 1)"><path d="{{ pet.sleep_path | escape }}" fill="currentColor"/></g>
     </svg>
   </div>
-  <div class="flex flex--row flex--between w--full gap--small">
-    <div class="flex flex--row gap--small"><span class="label label--small">FOOD</span><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Food: {{ pet.food | escape }}" shape-rendering="crispEdges"><path d="{{ pet.food_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
-    <div class="flex flex--row gap--small"><span class="label label--small">JOY</span><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Joy: {{ pet.joy | escape }}" shape-rendering="crispEdges"><path d="{{ pet.joy_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
-    <span class="label label--small">{{ pet.age | escape }}</span>
+  <div class="grid grid--cols-3 w--full gap--small">
+    <div class="flex flex--row flex--left gap--small"><span class="label label--small">FOOD</span><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Food: {{ pet.food | escape }}" shape-rendering="crispEdges"><path d="{{ pet.food_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
+    <div class="flex flex--row flex--center gap--small"><span class="label label--small">JOY</span><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Joy: {{ pet.joy | escape }}" shape-rendering="crispEdges"><path d="{{ pet.joy_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
+    <div class="flex flex--row flex--right"><span class="label label--small">{{ pet.age | escape }}</span></div>
   </div>
   <span class="label label--small {{ pet.notice_visibility | escape }}">{{ pet.notice | escape }}</span>
 </div>
