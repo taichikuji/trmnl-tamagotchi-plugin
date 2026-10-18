@@ -1,8 +1,14 @@
 name: Publish to TRMNL
 
-# Manual until hosted validation and a target plugin setting are configured.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "TRMNL/src/**"
+      - "TRMNL/media/**"
+      - ".github/workflows/publish.yml"
 
 permissions:
   contents: read
