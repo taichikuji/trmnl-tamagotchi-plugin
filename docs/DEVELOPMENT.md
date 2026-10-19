@@ -33,7 +33,7 @@ See [verification coverage and hosted progress](VERIFICATION.md) for completed a
 
 Each view contains one native `layout` and a sibling `title_bar`. Layout, grid, flex, spacing, sizing and typography use framework utilities. There are no custom stylesheets, inline styles or browser scripts in the plugin templates.
 
-SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. The shared `svg_logo` capture supplies a black egg as an inline SVG image to every title bar; `TRMNL/media/icon.svg` supplies the same artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
+Pixel SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. Shared captures provide the logo and status icons. `TRMNL/media/icon.svg` supplies the egg artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
 
 ## State and time
 

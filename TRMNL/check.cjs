@@ -302,7 +302,7 @@ test('plugin layouts use native framework components without custom CSS or brows
   assert.match(render().html,/\/framework\/css\/plugins.css/);
 });
 
-test('title bars share the black egg and the listing icon uses TRMNL orange',()=>{
+test('title bars share the theme-colored egg and the listing icon uses TRMNL orange',()=>{
   const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
   const icon=fs.readFileSync(path.join(root,'TRMNL/media/icon.svg'),'utf8');
   assert.match(shared,/{%- capture svg_logo -%}/);
@@ -313,8 +313,8 @@ test('title bars share the black egg and the listing icon uses TRMNL orange',()=
   for(const layout of layouts) {
     const html=render({layout}).html;
     const titleBar=html.slice(html.indexOf('<div class="title_bar">'));
-    const svg=Buffer.from(titleBar.match(/src="data:image\/svg\+xml;base64,([^"]+)"/)[1],'base64').toString();
-    assert.match(svg,/fill="#000000"/);
+    const svg=titleBar.match(/<svg\b[^>]*>[\s\S]*?<\/svg>/)[0];
+    assert.match(svg,/fill="currentColor"/);
     assert.equal(svg.match(/<path d="([^"]+)"/)[1],egg);
   }
 });

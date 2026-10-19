@@ -4,8 +4,6 @@ A TRMNL plugin that raises a nostalgic P1-style virtual pet. It hatches, eats, p
 
 ## Icon
 
-The listing icon is stored in [media/icon.svg](media/icon.svg) in TRMNL orange (`#E76F55`) and referenced from `settings.yml`. All four title bars reuse the black `svg_logo` captured in `shared.liquid`.
-
 <div align="center">
   <img src="media/icon.svg" alt="Plugin Icon" width="90">
 </div>
@@ -29,7 +27,7 @@ Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
 ## Templates
 
 - **transform.js**: Simulation, seeded care, evolution, saved state and original sprite data.
-- **shared.liquid**: Shared black egg logo; styling comes from the native TRMNL framework.
+- **shared.liquid**: Shared logo and status icons.
 - **full.liquid**: Centered pet, food, joy and age, with the character, stage and generation in the title bar.
 - **half_horizontal.liquid**: The same information in a shorter horizontal view.
 - **half_vertical.liquid**: Pet and needs with the character name and generation in the title bar.

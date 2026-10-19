@@ -37,15 +37,15 @@ function render(options = {}, state) {
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
-  // Render shared SVG captures/base64 filters and escaped fields used by the templates.
+  // Render shared SVG captures and escaped fields used by the templates.
   const sharedSource = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
   const captures = {};
   const shared = sharedSource.replace(/{%-?\s*capture (\w+)\s*-?%}([\s\S]*?){%-?\s*endcapture\s*-?%}/g,(_,name,value) => {
     captures[name] = value.trim(); return '';
   }).replace(/{% comment %}[\s\S]*?{% endcomment %}/g,'');
-  const content = markup.replace(/{{\s*(\w+)\s*\|\s*base64_encode\s*}}/g, (_,name) => {
+  const content = markup.replace(/{{\s*(\w+)\s*}}/g, (_,name) => {
     if (!captures[name]) throw Error(`Missing shared capture: ${name}`);
-    return Buffer.from(captures[name]).toString('base64');
+    return captures[name];
   }).replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
   if (/{[{%]/.test(shared+content)) throw Error('Unsupported Liquid syntax in preview');
   const screenClass = device === 'og' ? 'screen--og screen--1bit' : `screen--v2 screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
