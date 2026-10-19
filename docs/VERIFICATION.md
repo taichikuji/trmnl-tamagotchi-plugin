@@ -19,8 +19,6 @@ Run `node TRMNL/check.cjs` from the repository root with Node 20+ and Python 3. 
 
 Local browser inspection uses the official Framework 3.4.3 release and its own fonts, device scale, view, and mashup wrappers. All twelve OG/X landscape/X portrait layout combinations were checked with the longest character name, with no measured content overflow. Sleep, illness, egg, and rebirth also received compact-slot visual checks. Representative captures are in `TRMNL/media/`. These are local framework renders; physical-device rendering remains unverified.
 
-The [food/joy icon comparison](NEEDS-ICONS.md) adds 48 browser renders covering four label treatments across those twelve device/layout combinations. Icons only preserves icon and heart-meter dimensions without measured needs overlap or overflow. Ten additional OG/X portrait quadrant renders check egg, rebirth, sleeping, illness and time zone warning. The local preview selector exercises all four treatments; the templates and six README previews keep icons only. All 26 automated checks pass with the embedded SVG captures.
-
 ## Hosted validation progress
 
 Checked against the private installation through its plugin MCP key on 2026-10-18:
