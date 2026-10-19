@@ -15,7 +15,8 @@ Run `node TRMNL/check.cjs` from the repository root with Node 20+ and Python 3. 
 - The actual generated ZIP has exactly seven root-level files. Its own `transform.js` is executed in isolation to initialize an egg and resume the same life as Babytchi.
 - Plugin settings use Static input, Node, a 15-minute interval and a description within the hosted 35-character limit.
 - Plugin templates are checked for native layout/title-bar structure, crisp SVG artwork, and absence of custom CSS, inline styles, or browser scripts.
-- Template checks cover 468 device/layout/character/condition combinations, plus escaping and sleeping/death indications.
+- Template checks cover 1,092 device/layout/character/condition combinations, plus escaping and sleeping/death indications.
+- Cleanup and discipline indicators are checked through completed care, missed calls, duplicate timestamps, sleep, death and rebirth. Every pet pose stays clear of the indicators, and combined indicator payloads remain below 5 KB.
 
 Local browser inspection uses the official Framework 3.4.3 release and its own fonts, device scale, view, and mashup wrappers. All twelve OG/X landscape/X portrait layout combinations were checked with the longest character name, with no measured content overflow. Sleep, illness, egg, and rebirth also received compact-slot visual checks. Representative captures are in `TRMNL/media/`. These are local framework renders; physical-device rendering remains unverified.
 

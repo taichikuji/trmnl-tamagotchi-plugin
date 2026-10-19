@@ -17,6 +17,8 @@ The disassembly's informal graphics captions are incomplete. For example, the ad
 
 Bandai retains the original artwork. The embedded pixel paths and screenshots are excluded from this repository’s MIT license; see LICENSE. Public TRMNL recipe publication is deferred.
 
+The cleanup indicator uses the original 8×8 poop at **0x16F0–0x16F7**, decoded as column bytes by the same extraction script. The discipline `!` is a simple project-drawn pixel marker, not an extracted ROM icon.
+
 ## TRMNL sources
 
 - [Saved State](https://help.trmnl.com/en/articles/16777795-saved-state): Static strategy support, `input.trmnl.state`, returned `trmnl_state`, per-install state, 8192-byte cap and Force Refresh behavior.

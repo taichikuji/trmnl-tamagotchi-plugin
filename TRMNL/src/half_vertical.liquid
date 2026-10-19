@@ -3,6 +3,8 @@
     <svg class="w--full h--[70cqh]" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
       <g transform="{{ pet.sprite_transform | escape }}"><path d="{{ pet.sprite_path | escape }}" fill="currentColor"/></g>
       <g transform="translate(24 1)"><path d="{{ pet.sleep_path | escape }}" fill="currentColor"/></g>
+      <g transform="translate(24 12)"><path d="{{ pet.poop_path | escape }}" fill="currentColor"/></g>
+      <g transform="translate(27 2)"><path d="{{ pet.discipline_path | escape }}" fill="currentColor"/></g>
     </svg>
   </div>
   <div class="grid grid--cols-3 w--full gap--small">

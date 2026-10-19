@@ -180,6 +180,42 @@ test('bad state, version, timestamps and timezone fail without mutating saved da
   assert.equal(ctx.timestampMinute({trmnl:{system:{timestamp_utc:String(start*60)}}}),start);
   assert.match(ctx.run({trmnl:{system:{timestamp_utc:start*60}}}).pet.warning,/Time zone unavailable/);
 });
+test('care indicators follow actual cleanup and discipline calls without changing the life', () => {
+  const s=hatched(); s.poop=3; s.timers.scold=1;
+  s.due={clean:s.cursor+2,discipline:s.cursor+2};
+  const before=JSON.stringify(s);
+  const active=ctx.displayPet(s,s.cursor);
+  assert.ok(active.poop_path); assert.ok(active.discipline_path);
+  assert.match(active.status,/Calling for discipline.*Needs cleaning/);
+  assert.equal(JSON.stringify(s),before); // No saved-state or RNG mutations when drawing.
+  assert.deepEqual(clean(ctx.displayPet(ctx.advance(s,s.cursor),s.cursor)),clean(active));
+  const waiting=ctx.advance(s,s.cursor+1);
+  assert.ok(ctx.displayPet(waiting,waiting.cursor).poop_path);
+  assert.ok(ctx.displayPet(waiting,waiting.cursor).discipline_path);
+  const cared=ctx.advance(s,s.cursor+2);
+  assert.equal(cared.poop,0); assert.equal(cared.timers.scold,0);
+  const clear=ctx.displayPet(cared,cared.cursor);
+  assert.equal(clear.poop_path,''); assert.equal(clear.discipline_path,'');
+  assert.doesNotMatch(clear.status,/Calling for discipline|Needs cleaning/);
+  // A delayed refresh shows the current state, not an expired call or stale care task.
+  s.due={discipline:s.cursor+100}; s.timers.scold=14;
+  const expired=ctx.advance(s,s.cursor+1);
+  assert.equal(expired.missed_discipline,1);
+  assert.equal(ctx.displayPet(expired,expired.cursor).discipline_path,'');
+  s.sleeping=true;
+  const asleep=ctx.displayPet(s,s.cursor);
+  assert.ok(asleep.poop_path); assert.ok(asleep.sleep_path); assert.equal(asleep.discipline_path,'');
+  for(const character of [0,1]) {
+    const pet=ctx.displayPet({...s,character,sleeping:false},s.cursor);
+    assert.equal(pet.discipline_path,'');
+    if(character===0) assert.equal(pet.poop_path,'');
+  }
+  ctx.die(s,'Test end of life');
+  const dead=ctx.displayPet(s,s.cursor);
+  assert.equal(dead.poop_path,''); assert.equal(dead.discipline_path,''); assert.equal(dead.sleep_path,'');
+  const reborn=ctx.advance(s,s.cursor+60);
+  assert.equal(ctx.displayPet(reborn,reborn.cursor).poop_path,'');
+});
 test('account timezone is automatic, ignores the removed override and survives missing or invalid metadata', () => {
   const result=ctx.run({trmnl:{state:{},system:{timestamp_utc:start*60},plugin_settings:{id:123,custom_fields_values:{timezone:'America/New_York'}},user:{time_zone_iana:' Europe/Madrid '}}});
   assert.equal(result.trmnl_state.timezone,'Europe/Madrid');
@@ -269,8 +305,11 @@ test('TRMNL source contains one standalone transform with all original sprite fr
 test('every display payload fits the conservative 5 KB merge-variable limit', () => {
   for(let character=0;character<=11;character++) {
     const s=character===0 ? fresh() : hatched(character);
-    const pet=ctx.displayPet(s,s.cursor);
-    assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120);
+    for(const sleeping of [false,true]) {
+      s.poop=8; s.timers.scold=1; s.sleeping=sleeping;
+      const pet=ctx.displayPet(s,s.cursor);
+      assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`character ${character}, sleeping ${sleeping}`);
+    }
   }
 });
 
@@ -278,12 +317,29 @@ const {render,fixture,devices,layouts}=require('../scripts/preview.cjs');
 test('all device/layout/character states render the actual templates without missing variables',()=>{
   for(const device of Object.keys(devices)) for(const layout of layouts) {
     for(const character of ['egg','babytchi','marutchi','tamatchi','kuchitamatchi','mametchi','ginjirotchi','maskutchi','kuchipatchi','nyorotchi','tarakotchi','bill','dead']) {
-      for(const mood of ['awake','sleeping','sick']) {
+      for(const mood of ['awake','sleeping','sick','poop','discipline','poop-discipline','sleeping-poop']) {
         const {html,width,height}=render({device,layout,character,mood});
         assert.ok(width>0 && height>0); assert.ok(!html.includes('{{')); assert.ok(!html.includes('undefined'));
         assert.match(html,/<path d="M/); assert.ok(!/<script/.test(html));
       }
     }
+  }
+});
+test('care indicators fit beside every pet pose and appear in every layout',()=>{
+  const sprites=clean(get('P1_SPRITES'));
+  for(let character=1;character<=11;character++) for(let minute=0;minute<210;minute+=15) {
+    const s=hatched(character); s.cursor+=minute; s.poop=1; s.timers.scold=1;
+    const pet=ctx.displayPet(s,s.cursor);
+    const x=Number(pet.sprite_transform.match(/translate\((\d+)/)[1]);
+    const points=[...pet.sprite_path.matchAll(/M(\d+) (\d+)h1v1h-1z/g)];
+    assert.ok(points.every(p=>x+Number(p[1])<24)); // Poop begins at x=24, call at x=27.
+    assert.equal(pet.poop_path,sprites.poop);
+  }
+  for(const device of Object.keys(devices)) for(const layout of layouts) {
+    const {html,pet}=render({device,layout,mood:'poop-discipline'});
+    assert.ok(html.includes(`<path d="${pet.poop_path}"`));
+    assert.ok(html.includes(`<path d="${pet.discipline_path}"`));
+    assert.match(html,/aria-label="[^\"]*Calling for discipline[^\"]*Needs cleaning/);
   }
 });
 test('plugin layouts use native framework components without custom CSS or browser scripts',()=>{

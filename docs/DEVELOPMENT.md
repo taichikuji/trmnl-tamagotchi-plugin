@@ -10,7 +10,7 @@ From the repository root, run:
 node scripts/preview.cjs
 ```
 
-Open **http://127.0.0.1:8766**. Choose a device, layout, character and pose state, or select **Seeded lifecycle** and advance time to exercise the simulation.
+Open **http://127.0.0.1:8766**. Choose a device, layout, character and display state, or select **Seeded lifecycle** and advance time to exercise the simulation. Display states include pending cleanup, a discipline call, both together, and sleep with uncleared poop.
 
 The first launch downloads the official Framework 3.4.3 release and fonts into the ignored `.cache/` directory. Later launches work offline. The preview supplies TRMNL's native screen and mashup wrappers, including X's 1.8 physical-pixel scale. Preview-only CSS positions and crops the device canvas; it is excluded from the plugin ZIP.
 
@@ -34,6 +34,8 @@ See [verification coverage and hosted progress](VERIFICATION.md) for completed a
 Each view contains one native `layout` and a sibling `title_bar`. Layout, grid, flex, spacing, sizing and typography use framework utilities. There are no custom stylesheets, inline styles or browser scripts in the plugin templates.
 
 Pixel SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. Shared captures provide the logo and status icons. `TRMNL/media/icon.svg` supplies the egg artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
+
+One original pixel poop beside the pet means cleanup is pending, regardless of the stored count. A pixel `!` above it means an active discipline call, not a request for user input. Cleanup removes the poop; answering or expiring the call removes the `!`. Sleep hides the call marker but preserves uncleared poop; eggs and death show neither. These indicators only read current state, so events resolved between refreshes are not replayed or prolonged. All four layouts use the same artwork, with no additional CSS or saved-state fields.
 
 ## State and time
 

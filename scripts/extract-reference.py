@@ -77,6 +77,7 @@ assets['babytchi'] = [path([[0] * 16 for _ in range(8)] + pixels(d)) for d in (0
 # Original death angel and sleep Z; whole sprites, no firmware logic.
 assets['dead'] = [path(pixels(0x4b) + pixels(0x4c))] * 2
 assets['sleep'] = path([[ops[0x17d0 + x][1] >> y & 1 for x in range(8)] for y in range(8)])
+assets['poop'] = path([[ops[0x16f0 + x][1] >> y & 1 for x in range(8)] for y in range(8)])
 # Update the embedded data in the one deployable file; do not create extra JS files.
 transform = root / 'TRMNL/src/transform.js'
 text = transform.read_text()
