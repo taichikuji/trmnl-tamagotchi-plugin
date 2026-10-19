@@ -12,6 +12,7 @@ const devices = { og: [800,480], x: [1872,1404], portrait: [1404,1872] };
 const frameworkVersion = '3.4.3';
 const assetRoot = path.join(root, '.cache/framework', frameworkVersion);
 const layouts = ['full','half_horizontal','half_vertical','quadrant'];
+const needsTreatments = {icons:'Icons only (kept)',words:'Original words',alongside:'Icons beside words',stacked:'Icons above words'};
 const base = Date.parse('2026-10-18T09:00:00Z') / 60000;
 const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function fixture(character = 'mametchi', mood = 'awake', seed = 42) {
@@ -36,15 +37,25 @@ function render(options = {}, state) {
   const height = layout === 'full' ? dh : (layout === 'half_horizontal' || layout === 'quadrant' ? (lh - 20) / 2 - 5 : lh - 20) * scale;
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
-  const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
-  // Render the shared logo capture/base64 filter and escaped fields used by the templates.
+  let markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
+  // Alternative treatments stay in the local preview; the templates keep the chosen design.
+  const treatment = Object.hasOwn(needsTreatments,options.needs) ? options.needs : 'icons';
+  if(treatment !== 'icons') {
+    markup = markup.replace(/<img class="w--\d+ h--\d+" src="data:image\/svg\+xml;base64,{{ svg_(food|joy) \| base64_encode }}" alt="">/g,(icon,need) => {
+      const label = `<span class="label${layout === 'full' ? '' : ' label--small'}">${need.toUpperCase()}</span>`;
+      if(treatment === 'words') return label;
+      return `<span class="flex flex--${treatment === 'stacked' ? 'col' : 'row'} gap--xsmall">${icon}${label}</span>`;
+    });
+  }
+  // Render shared SVG captures/base64 filters and escaped fields used by the templates.
   const sharedSource = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
-  const capture = /{%-?\s*capture svg_logo\s*-?%}([\s\S]*?){%-?\s*endcapture\s*-?%}/;
-  const logo = sharedSource.match(capture)?.[1].trim();
-  const shared = sharedSource.replace(capture,'').replace(/{% comment %}[\s\S]*?{% endcomment %}/g,'');
-  const content = markup.replace(/{{\s*svg_logo\s*\|\s*base64_encode\s*}}/g, () => {
-    if (!logo) throw Error('Missing shared logo capture');
-    return Buffer.from(logo).toString('base64');
+  const captures = {};
+  const shared = sharedSource.replace(/{%-?\s*capture (\w+)\s*-?%}([\s\S]*?){%-?\s*endcapture\s*-?%}/g,(_,name,value) => {
+    captures[name] = value.trim(); return '';
+  }).replace(/{% comment %}[\s\S]*?{% endcomment %}/g,'');
+  const content = markup.replace(/{{\s*(\w+)\s*\|\s*base64_encode\s*}}/g, (_,name) => {
+    if (!captures[name]) throw Error(`Missing shared capture: ${name}`);
+    return Buffer.from(captures[name]).toString('base64');
   }).replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
   if (/{[{%]/.test(shared+content)) throw Error('Unsupported Liquid syntax in preview');
   const screenClass = device === 'og' ? 'screen--og screen--1bit' : `screen--v2 screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
@@ -62,6 +73,7 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <div class="toolbar"><div class="heading"><h1>TRMNLGotchi</h1><p>Your nostalgic friend on TRMNL!</p></div>
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
+<label>Needs labels<select id="needs">${Object.entries(needsTreatments).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label>
 <label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='mametchi'?'selected':''}>${x}</option>`).join('')}</select></label>
 <label>Pose state<select id="mood"><option value="awake">Awake</option><option value="sleeping">Sleeping</option><option value="sick">Unwell</option><option value="timezone-unavailable">Time zone unavailable</option></select></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
@@ -71,8 +83,8 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <script>
 let saved,dimensions,seed=42;const $=id=>document.getElementById(id);
 function resize(){if(!dimensions)return;const scale=Math.min(1,(innerWidth-58)/dimensions.width,(innerHeight-255)/dimensions.height);$('holder').style.width=dimensions.width*scale+'px';$('holder').style.height=dimensions.height*scale+'px';$('screen').style.width=dimensions.width+'px';$('screen').style.height=dimensions.height+'px';$('screen').style.transform='scale('+scale+')'}
-async function update(minutes=0,reset=false){const lifecycle=$('character').value==='simulation';const response=await fetch('/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:$('device').value,layout:$('layout').value,character:$('character').value,mood:$('mood').value,lifecycle,minutes,state:reset?null:saved,seed})});if(!response.ok){$('caption').textContent=await response.text();return}const data=await response.json();if(lifecycle)saved=data.state;dimensions=data;$('screen').srcdoc=data.html;$('state').textContent=JSON.stringify(data.state,null,2);$('caption').textContent=lifecycle?'Simulation: '+data.pet.updated_at+' · '+data.pet.caretaker+' caretaker · '+data.pet.status:'Artwork preview · '+data.pet.name+' · '+data.width+' × '+data.height;resize()}
-for(const id of ['device','layout','character','mood'])$(id).addEventListener('change',()=>update());for(const n of [15,360,1440])$('step'+n).addEventListener('click',()=>{if($('character').value!=='simulation'){$('character').value='simulation'}update(n)});$('reset').addEventListener('click',()=>{seed++;saved=null;$('character').value='simulation';update(0,true)});addEventListener('resize',resize);update();
+async function update(minutes=0,reset=false){const lifecycle=$('character').value==='simulation';const response=await fetch('/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:$('device').value,layout:$('layout').value,needs:$('needs').value,character:$('character').value,mood:$('mood').value,lifecycle,minutes,state:reset?null:saved,seed})});if(!response.ok){$('caption').textContent=await response.text();return}const data=await response.json();if(lifecycle)saved=data.state;dimensions=data;$('screen').srcdoc=data.html;$('state').textContent=JSON.stringify(data.state,null,2);$('caption').textContent=lifecycle?'Simulation: '+data.pet.updated_at+' · '+data.pet.caretaker+' caretaker · '+data.pet.status:'Artwork preview · '+data.pet.name+' · '+data.width+' × '+data.height;resize()}
+for(const id of ['device','layout','needs','character','mood'])$(id).addEventListener('change',()=>update());for(const n of [15,360,1440])$('step'+n).addEventListener('click',()=>{if($('character').value!=='simulation'){$('character').value='simulation'}update(n)});$('reset').addEventListener('click',()=>{seed++;saved=null;$('character').value='simulation';update(0,true)});addEventListener('resize',resize);update();
 </script></html>`;
 function server() {
   return http.createServer(async (req,res) => {

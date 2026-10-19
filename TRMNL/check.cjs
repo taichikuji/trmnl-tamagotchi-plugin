@@ -312,7 +312,8 @@ test('title bars share the black egg and the listing icon uses TRMNL orange',()=
   const egg=icon.match(/<path d="([^"]+)"/)[1];
   for(const layout of layouts) {
     const html=render({layout}).html;
-    const svg=Buffer.from(html.match(/src="data:image\/svg\+xml;base64,([^"]+)"/)[1],'base64').toString();
+    const titleBar=html.slice(html.indexOf('<div class="title_bar">'));
+    const svg=Buffer.from(titleBar.match(/src="data:image\/svg\+xml;base64,([^"]+)"/)[1],'base64').toString();
     assert.match(svg,/fill="#000000"/);
     assert.equal(svg.match(/<path d="([^"]+)"/)[1],egg);
   }

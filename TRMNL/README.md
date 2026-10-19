@@ -14,6 +14,8 @@ The listing icon is stored in [media/icon.svg](media/icon.svg) in TRMNL orange (
 
 Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
 
+Food and joy use the supplied Tamagotchi icons beside the heart meters. See [all four label options and the comparison](../docs/NEEDS-ICONS.md), or switch **Needs labels** in the local preview to compare them on any device and layout.
+
 | Full View | Half Horizontal View |
 |------------|----------------------|
 | ![Full View](media/preview_full.webp) | ![Half Horizontal View](media/preview_half_horizontal.webp) |
@@ -29,7 +31,7 @@ Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
 ## Templates
 
 - **transform.js**: Simulation, seeded care, evolution, saved state and original sprite data.
-- **shared.liquid**: Shared black egg logo; styling comes from the native TRMNL framework.
+- **shared.liquid**: Shared black egg, food and joy SVGs; styling comes from the native TRMNL framework.
 - **full.liquid**: Centered pet, food, joy and age, with the character, stage and generation in the title bar.
 - **half_horizontal.liquid**: The same information in a shorter horizontal view.
 - **half_vertical.liquid**: Pet and needs with the character name and generation in the title bar.

@@ -10,7 +10,7 @@ From the repository root, run:
 node scripts/preview.cjs
 ```
 
-Open **http://127.0.0.1:8766**. Choose a device, layout, character and pose state, or select **Seeded lifecycle** and advance time to exercise the simulation.
+Open **http://127.0.0.1:8766**. Choose a device, layout, character and pose state, or select **Seeded lifecycle** and advance time to exercise the simulation. **Needs labels** compares the original words, icons only, icons beside words and icons above words. Icons only is the template default; the other treatments exist only in the local preview. See the [visual comparison](NEEDS-ICONS.md).
 
 The first launch downloads the official Framework 3.4.3 release and fonts into the ignored `.cache/` directory. Later launches work offline. The preview supplies TRMNL's native screen and mashup wrappers, including X's 1.8 physical-pixel scale. Preview-only CSS positions and crops the device canvas; it is excluded from the plugin ZIP.
 
@@ -33,7 +33,9 @@ See [verification coverage and hosted progress](VERIFICATION.md) for completed a
 
 Each view contains one native `layout` and a sibling `title_bar`. Layout, grid, flex, spacing, sizing and typography use framework utilities. There are no custom stylesheets, inline styles or browser scripts in the plugin templates.
 
-SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. The shared `svg_logo` capture supplies a black egg as an inline SVG image to every title bar; `TRMNL/media/icon.svg` supplies the same artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
+Pet and heart SVG artwork uses `shape-rendering="crispEdges"`. Pixel hearts avoid font-dependent glyph rendering. The shared `svg_food` and `svg_joy` captures embed the supplied `TRMNL/media/FOOD-black.svg` and `TRMNL/media/JOY-black.svg` unchanged. Keep those captures in sync when editing the source SVGs. Needs icons are 28 framework pixels in full view and 24 in mashups, with the framework applying device scaling. Accessible Food/Joy names and heart values remain on the heart SVGs.
+
+The shared `svg_logo` capture supplies a black egg as an inline SVG image to every title bar; `TRMNL/media/icon.svg` supplies the same artwork in orange for the plugin listing. Upload the listing icon separately from the flat import ZIP. The full and horizontal title bars show the plugin, character, stage and generation; narrow views keep the character name and generation. Sleep has a visible Z. Illness, rebirth countdowns and time zone warnings appear when relevant.
 
 ## State and time
 

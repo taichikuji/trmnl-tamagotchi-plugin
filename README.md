@@ -2,8 +2,6 @@
 
 Your nostalgic friend on TRMNL! A P1-style virtual pet with full, half and quadrant layouts for TRMNL OG and TRMNL X.
 
-Set it up [as a private plugin](TRMNL/README.md#setup).
-
 ## Features
 
 - Original P1 pixel artwork
