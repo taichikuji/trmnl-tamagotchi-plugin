@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const http = require('node:http');
+const { renderLiquid } = require('./render-liquid.cjs');
 const root = path.join(__dirname, '..');
 const src = path.join(root, 'TRMNL/src');
 const context = vm.createContext({ Date, Intl });
@@ -39,25 +40,17 @@ function render(options = {}, state) {
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
-  // Render shared SVG captures and escaped fields used by the templates.
+  // Shared definitions are loaded before the view; render scopes are isolated.
   const sharedSource = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
-  const captures = {};
-  const shared = sharedSource.replace(/{%-?\s*capture (\w+)\s*-?%}([\s\S]*?){%-?\s*endcapture\s*-?%}/g,(_,name,value) => {
-    captures[name] = value.trim(); return '';
-  }).replace(/{% comment %}[\s\S]*?{% endcomment %}/g,'');
-  const content = markup.replace(/{{\s*(\w+)\s*}}/g, (_,name) => {
-    if (!captures[name]) throw Error(`Missing shared capture: ${name}`);
-    return captures[name];
-  }).replace(/{{\s*pet\.(\w+)\s*\|\s*escape\s*}}/g, (_,key) => escape(pet[key]));
-  if (/{[{%]/.test(shared+content)) throw Error('Unsupported Liquid syntax in preview');
-  const screenClass = device === 'og' ? 'screen--og screen--1bit' : `screen--v2 screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
+  const content = renderLiquid(sharedSource+'\n'+markup, {pet});
+  const screenClass = device === 'og' ? 'screen--og screen--sm screen--1bit' : `screen--v2 screen--lg screen--density-2x screen--4bit${device === 'portrait' ? ' screen--portrait' : ''}`;
   const mashup = {half_horizontal:'1Tx1B',half_vertical:'1Lx1R',quadrant:'2x2'}[layout];
   const view = `<div class="view view--${layout}">${content}</div>`;
   const surface = mashup ? `<div class="mashup mashup--${mashup}">${view}</div>` : view;
   const html = `<!doctype html><html lang="en"><meta charset="utf-8"><title>${escape(pet.name)} · TRMNLGotchi preview</title>
 <link rel="stylesheet" href="/framework/css/plugins.css">
 <style>/* Preview host only: clip one native view from the device canvas. */ html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:white} .screen{position:absolute;left:${layout === 'full' ? 0 : -10 * scale}px;top:${layout === 'full' ? 0 : -10 * scale}px}</style>
-${shared}<body class="trmnl"><div class="screen ${screenClass}">${surface}</div></body></html>`;
+<body class="trmnl"><div class="screen ${screenClass}">${surface}</div></body></html>`;
   return {html,width,height,pet};
 }
 const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>TRMNLGotchi · preview</title>

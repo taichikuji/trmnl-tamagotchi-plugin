@@ -317,7 +317,7 @@ const {render,fixture,devices,layouts}=require('../scripts/preview.cjs');
 test('all device/layout/character states render the actual templates without missing variables',()=>{
   for(const device of Object.keys(devices)) for(const layout of layouts) {
     for(const character of ['egg','babytchi','marutchi','tamatchi','kuchitamatchi','mametchi','ginjirotchi','maskutchi','kuchipatchi','nyorotchi','tarakotchi','bill','dead']) {
-      for(const mood of ['awake','sleeping','sick','poop','discipline','poop-discipline','sleeping-poop']) {
+      for(const mood of ['awake','sleeping','sick','poop','discipline','poop-discipline','sleeping-poop','timezone-unavailable']) {
         const {html,width,height}=render({device,layout,character,mood});
         assert.ok(width>0 && height>0); assert.ok(!html.includes('{{')); assert.ok(!html.includes('undefined'));
         assert.match(html,/<path d="M/); assert.ok(!/<script/.test(html));
@@ -346,16 +346,37 @@ test('plugin layouts use native framework components without custom CSS or brows
   const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
   for(const layout of layouts) {
     const markup=fs.readFileSync(path.join(root,'TRMNL/src',layout+'.liquid'),'utf8');
+    const html=render({layout}).html;
     assert.doesNotMatch(shared+markup,/<style|\bstyle\s*=|<script|!important/i);
     assert.equal((markup.match(/class="layout /g)||[]).length,1);
-    assert.match(markup,/<\/div>\s*<div class="title_bar">/);
-    assert.match(markup,/<span class="title">[^<]+<\/span>\s*<span class="instance">[^<]+<\/span>/);
-    assert.match(markup,/shape-rendering="crispEdges"/);
-    assert.match(markup,/Food: {{ pet.food \| escape }}/);
-    assert.match(markup,/Joy: {{ pet.joy \| escape }}/);
+    assert.match(markup,/{% render 'pet_content',/);
+    assert.match(markup,/{% render 'title_bar',/);
+    assert.match(html,/<\/div>\s*<div class="title_bar">/);
+    assert.match(html,/<span class="title">[^<]+<\/span>\s*<span class="instance">[^<]+<\/span>/);
+    assert.match(html,/shape-rendering="crispEdges"/);
+    assert.match(html,/aria-label="Food: [^"]+"/);
+    assert.match(html,/aria-label="Joy: [^"]+"/);
+    assert.match(html,/portrait:grid--cols-2/);
+    assert.match(html,/lg:w--/);
+    assert.match(html,/screen--sm/);
   }
+  assert.match(render({device:'x'}).html,/screen--lg screen--density-2x/);
   assert.match(render().html,/class="trmnl"/);
   assert.match(render().html,/\/framework\/css\/plugins.css/);
+});
+
+test('shared rendering isolates parameters, escapes values and preserves layout-specific banners',()=>{
+  const {renderLiquid}=require('../scripts/render-liquid.cjs');
+  assert.throws(()=>renderLiquid("{% template private %}{{ secret }}{% endtemplate %}{% render 'private' %}",{secret:'outer scope'}),/Missing Liquid variable: secret/);
+  assert.equal(renderLiquid("{% template text %}{{ text | escape }}{% endtemplate %}{% render 'text', text: message %}",{message:'<b>{{ secret }}</b>'}),'&lt;b&gt;{{ secret }}&lt;/b&gt;');
+  for(const layout of layouts) {
+    const html=render({layout,character:'kuchitamatchi'}).html;
+    const title=html.match(/<span class="title">([^<]+)<\/span>/)[1];
+    const instance=html.match(/<span class="instance">([^<]+)<\/span>/)[1];
+    const compact=['half_vertical','quadrant'].includes(layout);
+    assert.equal(title,compact?'Kuchitamatchi':'TRMNLGotchi');
+    assert.equal(instance,compact?'Gen 1':'Kuchitamatchi · TEEN · Gen 1');
+  }
 });
 
 test('title bars share the theme-colored egg and the listing icon uses TRMNL orange',()=>{
@@ -395,6 +416,7 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^refresh_interval: 15$/m);
   assert.ok(!/^id:/m.test(settings));
   assert.doesNotMatch(settings,/keyname: timezone|Time zone override/);
+  assert.match(settings,/href="https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/issues"/);
 });
 test('the flat import ZIP includes and executes its standalone Serverless script', () => {
   const os=require('node:os');

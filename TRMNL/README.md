@@ -27,7 +27,7 @@ Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
 ## Templates
 
 - **transform.js**: Simulation, seeded care, evolution, saved state and original sprite data.
-- **shared.liquid**: Shared logo and status icons.
+- **shared.liquid**: Shared icons, pet artwork, needs, notices and title bar. Each layout supplies its sizing and banner options.
 - **full.liquid**: Centered pet, food, joy and age, with the character, stage and generation in the title bar.
 - **half_horizontal.liquid**: The same information in a shorter horizontal view.
 - **half_vertical.liquid**: Pet and needs with the character name and generation in the title bar.

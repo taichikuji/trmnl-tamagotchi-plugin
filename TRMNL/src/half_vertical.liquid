@@ -1,21 +1,8 @@
 <div class="layout layout--col gap--small" aria-label="{{ pet.status | escape }}">
-  <div class="flex flex--center grow w--full">
-    <svg class="w--full h--[70cqh]" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-      <g transform="{{ pet.sprite_transform | escape }}"><path d="{{ pet.sprite_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(24 1)"><path d="{{ pet.sleep_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(24 12)"><path d="{{ pet.poop_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(27 2)"><path d="{{ pet.discipline_path | escape }}" fill="currentColor"/></g>
-    </svg>
-  </div>
-  <div class="grid grid--cols-3 w--full gap--small">
-    <div class="flex flex--row flex--left gap--small"><svg class="w--6 h--6" viewBox="0 0 75 75" fill="currentColor" aria-hidden="true">{{ svg_food }}</svg><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Food: {{ pet.food | escape }}" shape-rendering="crispEdges"><path d="{{ pet.food_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
-    <div class="flex flex--row flex--center gap--small"><svg class="w--6 h--6" viewBox="0 0 75 75" fill="currentColor" fill-rule="evenodd" aria-hidden="true">{{ svg_joy }}</svg><svg class="w--16 h--4" viewBox="0 0 36 8" role="img" aria-label="Joy: {{ pet.joy | escape }}" shape-rendering="crispEdges"><path d="{{ pet.joy_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
-    <div class="flex flex--row flex--right"><span class="label label--small">{{ pet.age | escape }}</span></div>
-  </div>
-  <span class="label label--small {{ pet.notice_visibility | escape }}">{{ pet.notice | escape }}</span>
+  {% render 'pet_content', pet: pet, svg_food: svg_food, svg_joy: svg_joy,
+    sprite_size: 'h--[70cqh] portrait:h--[60cqh]',
+    icon_size: 'w--6 h--6 lg:w--7 lg:h--7',
+    hearts_size: 'w--16 h--4 lg:w--20 lg:h--5',
+    label_size: 'label--small lg:label--base' %}
 </div>
-<div class="title_bar">
-  <svg class="image" width="24" height="24" viewBox="83.274 6.4476 26 26" fill="currentColor" aria-hidden="true">{{ svg_logo }}</svg>
-  <span class="title">{{ pet.name | escape }}</span>
-  <span class="instance">Gen {{ pet.generation | escape }}</span>
-</div>
+{% render 'title_bar', pet: pet, svg_logo: svg_logo, title: pet.name, compact: true %}
