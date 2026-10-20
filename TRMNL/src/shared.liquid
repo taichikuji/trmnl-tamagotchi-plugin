@@ -32,7 +32,7 @@
 {% template title_bar %}
 <div class="title_bar">
   <svg class="image" width="24" height="24" viewBox="83.274 6.4476 26 26" fill="currentColor" aria-hidden="true">{{ svg_logo }}</svg>
-  <span class="title lg:text--large">{{ title | escape }}</span>
-  <span class="instance lg:text--large">{% unless compact %}{{ pet.name | escape }} · {{ pet.stage | escape }} · {% endunless %}Gen {{ pet.generation | escape }}</span>
+  <span class="title">{{ title | escape }}</span>
+  <span class="instance">{% unless compact %}{{ pet.name | escape }} · {{ pet.stage | escape }} · {% endunless %}Gen {{ pet.generation | escape }}</span>
 </div>
 {% endtemplate %}
