@@ -14,10 +14,6 @@ custom_fields:
   name: About This Plugin
   field_type: author_bio
   category: life
-  description: |
-    <p>TRMNLGotchi is a low-maintenance virtual pet for your TRMNL, created by Ivan Perez.</p>
-    <p>An automatic caretaker feeds, plays with and raises each generation. Sleep follows your TRMNL account time zone. No external account, API key or service is needed.</p>
-    <p>For setup, see the <a href="https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup">installation guide</a>. For support or feedback, <a href="https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues">open a GitHub issue</a>.</p>
-    <p>Unofficial fan project; Tamagotchi is a trademark of BANDAI Co., Ltd. See the <a href="https://github.com/taichikuji/trmnl-tamagotchi-plugin/blob/main/LICENSE">code and artwork notice</a>.</p>
+  description: "TRMNLGotchi is a low-maintenance virtual pet for your TRMNL, created by Ivan Perez!<br/>Unofficial fan project, unaffiliated with BANDAI or Bandai Namco; Tamagotchi is a BANDAI trademark."
   github_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin
   learn_more_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup
