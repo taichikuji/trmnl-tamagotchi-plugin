@@ -13,14 +13,14 @@ Your nostalgic friend on TRMNL! A P1-style virtual pet with full, half and quadr
 
 ## Local development
 
-Open `TRMNL/` with [TRMNLP](https://github.com/usetrmnl/trmnlp) to preview all four layouts. For selectable characters, the seeded lifecycle preview and verification commands, see the [development guide](docs/DEVELOPMENT.md).
+Open `TRMNL/` with [TRMNLP](https://github.com/usetrmnl/trmnlp) to preview all four layouts. For selectable characters, the seeded lifecycle preview and verification commands, see the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development).
 
 ## References
 
 - [P1 disassembly](https://github.com/agg23/tamagotchi-disassembled)
 - [P1 reverse-engineering findings](https://rhubarbtart.neocities.org/p1hackinglog)
-- [Rule table and model limitations](docs/RULES.md)
-- [Sources and sprite mapping](docs/SOURCES.md)
+- [Rule table and model limitations](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Lifecycle-rules)
+- [Sources and sprite mapping](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Research-and-sources)
 - [TRMNL screen templates](https://docs.trmnl.com/go/private-plugins/templates)
 - [TRMNL X guide](https://trmnl.com/framework/docs/3.4/trmnl_x_guide)
 - [TRMNL Saved State](https://help.trmnl.com/en/articles/16777795-saved-state)
