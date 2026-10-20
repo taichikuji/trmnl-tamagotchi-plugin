@@ -1,8 +1,8 @@
 <div class="layout layout--col gap--small" aria-label="{{ pet.status | escape }}">
   {% render 'pet_content', pet: pet, svg_food: svg_food, svg_joy: svg_joy,
-    sprite_size: 'h--[70cqh] portrait:h--[60cqh]',
-    icon_size: 'w--7 h--7 lg:w--9 lg:h--9',
-    hearts_size: 'w--20 h--5 lg:w--24 lg:h--6',
+    sprite_size: 'h--[70cqh] lg:landscape:h--[80cqh] portrait:h--[60cqh]',
+    icon_size: 'w--7 h--7 lg:w--10 lg:h--10',
+    hearts_size: 'w--20 h--5 lg:w--32 lg:h--8',
     label_size: 'lg:label--large' %}
 </div>
 {% render 'title_bar', pet: pet, svg_logo: svg_logo, title: 'TRMNLGotchi', compact: false %}

@@ -352,7 +352,7 @@ test('plugin layouts use native framework components without custom CSS or brows
     assert.match(markup,/{% render 'pet_content',/);
     assert.match(markup,/{% render 'title_bar',/);
     assert.match(html,/<\/div>\s*<div class="title_bar">/);
-    assert.match(html,/<span class="title">[^<]+<\/span>\s*<span class="instance">[^<]+<\/span>/);
+    assert.match(html,/<span class="title(?: [^"]+)?">[^<]+<\/span>\s*<span class="instance(?: [^"]+)?">[^<]+<\/span>/);
     assert.match(html,/shape-rendering="crispEdges"/);
     assert.match(html,/aria-label="Food: [^"]+"/);
     assert.match(html,/aria-label="Joy: [^"]+"/);
@@ -371,8 +371,8 @@ test('shared rendering isolates parameters, escapes values and preserves layout-
   assert.equal(renderLiquid("{% template text %}{{ text | escape }}{% endtemplate %}{% render 'text', text: message %}",{message:'<b>{{ secret }}</b>'}),'&lt;b&gt;{{ secret }}&lt;/b&gt;');
   for(const layout of layouts) {
     const html=render({layout,character:'kuchitamatchi'}).html;
-    const title=html.match(/<span class="title">([^<]+)<\/span>/)[1];
-    const instance=html.match(/<span class="instance">([^<]+)<\/span>/)[1];
+    const title=html.match(/<span class="title(?: [^"]+)?">([^<]+)<\/span>/)[1];
+    const instance=html.match(/<span class="instance(?: [^"]+)?">([^<]+)<\/span>/)[1];
     const compact=['half_vertical','quadrant'].includes(layout);
     assert.equal(title,compact?'Kuchitamatchi':'TRMNLGotchi');
     assert.equal(instance,compact?'Gen 1':'Kuchitamatchi · TEEN · Gen 1');

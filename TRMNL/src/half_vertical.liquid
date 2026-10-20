@@ -1,8 +1,8 @@
 <div class="layout layout--col gap--small" aria-label="{{ pet.status | escape }}">
   {% render 'pet_content', pet: pet, svg_food: svg_food, svg_joy: svg_joy,
     sprite_size: 'h--[70cqh] portrait:h--[60cqh]',
-    icon_size: 'w--6 h--6 lg:w--7 lg:h--7',
-    hearts_size: 'w--16 h--4 lg:w--20 lg:h--5',
+    icon_size: 'w--6 h--6 lg:w--8 lg:h--8',
+    hearts_size: 'w--16 h--4 lg:w--24 lg:h--6',
     label_size: 'label--small lg:label--base' %}
 </div>
 {% render 'title_bar', pet: pet, svg_logo: svg_logo, title: pet.name, compact: true %}
