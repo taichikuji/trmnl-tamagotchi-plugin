@@ -22,7 +22,7 @@ const moods = {
 };
 const base = Date.parse('2026-10-18T09:00:00Z') / 60000;
 const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-function fixture(character = 'mametchi', mood = 'awake', seed = 42) {
+function fixture(character = 'trmy', mood = 'awake', seed = 42) {
   const s = context.newLife(seed, base, 'Europe/Madrid');
   s.cursor += 7 * 1440;
   const index = characters.indexOf(character);
@@ -69,7 +69,7 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <div class="toolbar"><div class="heading"><h1>TRMNLGotchi</h1><p>Your nostalgic friend on TRMNL!</p></div>
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
-<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='mametchi'?'selected':''}>${x}</option>`).join('')}</select></label>
+<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='trmy'?'selected':''}>${x}</option>`).join('')}</select></label>
 <label>Display state<select id="mood">${Object.entries(moods).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
 <main class="preview-wrap"><div class="preview-frame" id="holder"><iframe id="screen" title="TRMNL display"></iframe></div></main>

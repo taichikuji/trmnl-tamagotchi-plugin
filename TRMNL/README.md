@@ -10,19 +10,19 @@ A TRMNL plugin that raises a nostalgic P1-style virtual pet. It hatches, eats, p
 
 ## Previews
 
-Previews use a fixed Mametchi artwork fixture rendered with Framework 3.4.3.
+Previews show TRMY in different care states, rendered with Framework 3.4.3.
 
-| Full View | Half Horizontal View |
+| Full View · Cheerful | Half Horizontal View · Playing |
 |------------|----------------------|
-| ![Full View](media/preview_full.webp) | ![Half Horizontal View](media/preview_half_horizontal.webp) |
+| ![Cheerful TRMY in the full view](media/preview_full.webp) | ![TRMY playing in the half horizontal view](media/preview_half_horizontal.webp) |
 
-| Half Vertical View | Quadrant View |
+| Half Vertical View · Having a Meal | Quadrant View · Needs Cleaning |
 |-------------------|----------------|
-| ![Half Vertical View](media/preview_half_vertical.webp) | ![Quadrant View](media/preview_quadrant.webp) |
+| ![TRMY having a meal in the half vertical view](media/preview_half_vertical.webp) | ![TRMY needing cleanup in the quadrant view](media/preview_quadrant.webp) |
 
-| TRMNL X Landscape | TRMNL X Portrait |
+| TRMNL X Landscape · Sleeping | TRMNL X Portrait · Under the Weather |
 |-------------------|------------------|
-| ![TRMNL X Landscape](media/preview_trmnl_x.webp) | ![TRMNL X Portrait](media/preview_trmnl_x_portrait.webp) |
+| ![TRMY sleeping on TRMNL X landscape](media/preview_trmnl_x.webp) | ![Unwell TRMY on TRMNL X portrait](media/preview_trmnl_x_portrait.webp) |
 
 ## Templates
 
