@@ -97,11 +97,24 @@ test('late lights count once, discipline expires after 14 awake minutes, baby ca
   }
 });
 test('illness advances growth, cures use character doses, third episode ends life', () => {
+  const doses=[2,2,2,2,1,1,1,2,3,2,1]; // P1 medicine increments 12, 8 and 13 require 2, 1 and 3 doses.
   for(let character=1;character<=11;character++) {
     const s=hatched(character); s.sick=true; s.sick_count=1; s.timers.illness=0; s.timers.growth=100;
     s.due.medicine=s.cursor+1;
     const next=ctx.advance(s,s.cursor+1);
     assert.equal(next.sick,false); assert.equal(next.timers.illness,stats[character][4]); assert.equal(next.timers.growth,99);
+    assert.equal(next.activity,`Feeling better after ${doses[character-1]} dose${doses[character-1]===1?'':'s'}`);
+    assert.equal(ctx.displayPet(next,next.cursor).status,next.activity);
+    assert.equal(next.activity_until,next.cursor+4);
+    assert.equal(next.sick_count,1); assert.equal(next.dead_at,null);
+    assert.equal(next.due.medicine,undefined); assert.equal(next.rng,s.rng);
+    const expected=clean(s); delete expected.due.medicine;
+    expected.sick=false; expected.timers.illness=stats[character][4];
+    expected.activity=next.activity; expected.activity_until=s.cursor+4;
+    const treated=clean(s); ctx.serviceCare(treated);
+    assert.deepEqual(treated,s); // A scheduled visit must not happen early.
+    treated.due.medicine=s.cursor; ctx.serviceCare(treated);
+    assert.deepEqual(treated,expected); // Only recovery fields change; no new state or RNG draws.
   }
   const s=hatched(5); s.sick_count=2; s.timers.illness=1;
   const next=ctx.advance(s,s.cursor+1); assert.equal(next.dead_at,s.cursor+1);
@@ -416,7 +429,10 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^refresh_interval: 15$/m);
   assert.ok(!/^id:/m.test(settings));
   assert.doesNotMatch(settings,/keyname: timezone|Time zone override/);
-  assert.match(settings,/href="https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/issues"/);
+  assert.match(settings,/^- keyname: plugin_info$/m);
+  assert.match(settings,/^  field_type: author_bio$/m);
+  assert.match(settings,/^  github_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin$/m);
+  assert.match(settings,/^  learn_more_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/tree\/main\/TRMNL#setup$/m);
 });
 test('the flat import ZIP includes and executes its standalone Serverless script', () => {
   const os=require('node:os');
