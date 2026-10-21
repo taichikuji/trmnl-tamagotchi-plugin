@@ -14,8 +14,8 @@ const clean = v => JSON.parse(JSON.stringify(v));
 const stats = clean(get('P1_STATS'));
 const start = Math.floor(Date.parse('2026-10-18T10:00:00Z') / 60000);
 const fresh = (seed = 42, time = start, zone = 'Europe/Madrid') => clean(ctx.newLife(seed, time, zone));
-function hatched(character = 2) {
-  const s = fresh(); s.character = 1; ctx.evolve(s);
+function hatched(character = 2, seed = 42) {
+  const s = fresh(seed); s.character = 1; ctx.evolve(s);
   if (character >= 3) { s.chart = character === 3 ? 2 : 4; s.character = character; }
   if (character >= 5) { s.character = character; s.chart = character === 7 ? 6 : 15; }
   s.character = character; if (character === 1) s.chart = 0;
@@ -26,13 +26,14 @@ function hatched(character = 2) {
   s.recent = []; return s;
 }
 
-test('character timers and all seven growth tables match independently extracted assembly facts', () => {
+test('original character timers and growth thresholds match extracted P1 facts with perfect-care alternatives', () => {
   const reference = require('./fixtures/p1-reference.json');
   for (const [name, data] of Object.entries(reference.stats)) {
     const index = clean(get('P1_NAMES')).indexOf(name);
     assert.deepEqual(stats[index], ['wake','sleep','hungry','happy','sickness','evolution','discipline_calls','discipline','medicine'].map(k => data[k]), name);
   }
-  assert.deepEqual(clean(get('P1_CHARTS')), reference.charts);
+  const charts=clean(get('P1_CHARTS')).map(chart=>chart.map(([c,d,next,character])=>[c,d,next,Array.isArray(character)?character[0]:character]));
+  assert.deepEqual(charts, reference.charts);
 });
 test('every growth branch and boundary, including teen subtypes and Bill', () => {
   const cases = [
@@ -97,8 +98,8 @@ test('late lights count once, discipline expires after 14 awake minutes, baby ca
   }
 });
 test('illness advances growth, cures use character doses, third episode ends life', () => {
-  const doses=[2,2,2,2,1,1,1,2,3,2,1]; // P1 medicine increments 12, 8 and 13 require 2, 1 and 3 doses.
-  for(let character=1;character<=11;character++) {
+  const doses=[2,2,2,2,1,1,1,2,3,2,1,1]; // P1 medicine increments 12, 8 and 13 require 2, 1 and 3 doses.
+  for(let character=1;character<stats.length;character++) {
     const s=hatched(character); s.sick=true; s.sick_count=1; s.timers.illness=0; s.timers.growth=100;
     s.due.medicine=s.cursor+1;
     const next=ctx.advance(s,s.cursor+1);
@@ -140,7 +141,7 @@ test('automatic rebirth occurs exactly one hour later and changes seed/caretaker
   assert.equal(ctx.advance(after,after.cursor+5).character,1);
 });
 test('lifecycle is identical for minute, 15-minute, irregular and multi-day refreshes', () => {
-  for(const seed of [0,42,99]) {
+  for(const seed of [0,42,90,99]) {
     const initial=fresh(seed); const until=start+14*1440;
     const expected=clean(ctx.advance(initial,until));
     for(const step of [1,15,73,1440]) {
@@ -315,22 +316,184 @@ test('TRMNL source contains one standalone transform with all original sprite fr
   for(const id of [...clean(get('P1_NAMES')),'dead']) assert.ok(sprites[id].every(p=>/^M\d+ \d+h1v1h-1z/.test(p)));
 });
 
+test('TRMY uses eight expressions in the shared pixel-path table and preserves its native 32px detail', () => {
+  const sprites=clean(get('P1_SPRITES'));
+  for(const id of [...clean(get('P1_NAMES')),'dead']) assert.equal(sprites[id].length,id==='trmy'?8:2,id);
+  assert.equal(new Set(sprites.trmy).size,8);
+  for(const frame of sprites.trmy) {
+    assert.match(frame,/^(?:M\d+ \d+h1v1h-1z)+$/);
+    const pixels=[...frame.matchAll(/M(\d+) (\d+)h1v1h-1z/g)].map(p=>[Number(p[1]),Number(p[2])]);
+    assert.ok(pixels.every(([x,y])=>x>=0 && x<32 && y>=0 && y<32));
+    assert.ok(pixels.some(([x,y])=>x>=16 && y>=16));
+  }
+});
+test('only flawless care on the Mametchi branch can yield TRMY, with an equal seeded choice', () => {
+  const reference=require('./fixtures/p1-reference.json');
+  const names=clean(get('P1_NAMES'));
+  const selected=Array.from({length:4096},(_,seed)=>ctx.chooseEvolution(2,0,0,seed).character);
+  assert.deepEqual([...new Set(selected)].sort((a,b)=>a-b),[5,12]);
+  assert.ok(selected.filter(character=>character===12).length>1900);
+  assert.ok(selected.filter(character=>character===5).length>1900);
+  for(let chart=0;chart<reference.charts.length;chart++) for(let care=0;care<16;care++) for(let missed=0;missed<16;missed++) {
+    const row=reference.charts[chart].find(([c,d])=>care>=c && missed>=d);
+    for(const seed of [0,1]) {
+      const next=clean(ctx.chooseEvolution(chart,care,missed,seed));
+      assert.equal(next.chart,row[2]);
+      if(chart===2 && care===0 && missed===0) assert.ok([5,12].includes(next.character));
+      else assert.equal(next.character,row[3],`chart ${chart}, care ${care}, missed ${missed}, seed ${seed}`);
+    }
+  }
+  assert.equal(names[12],'trmy'); assert.equal(stats.length,names.length);
+});
+test('TRMY evolves into its own saved character and receives its own stats through normal evolution', () => {
+  for(const [seed,character] of [[0,12],[1,5]]) {
+    const s=hatched(3,seed); s.timers.growth=1;
+    const before=JSON.stringify(s),rng=s.rng;
+    const adult=ctx.advance(s,s.cursor+1);
+    assert.equal(adult.character,character); assert.equal(adult.chart,15);
+    assert.equal(adult.hunger_rate,stats[character][2]); assert.equal(adult.happy_rate,stats[character][3]);
+    assert.equal(adult.timers.illness,stats[character][4]); assert.equal(adult.timers.growth,stats[character][5]);
+    assert.equal(adult.timers.discipline,stats[character][6]); assert.equal(adult.discipline,stats[character][7]);
+    assert.equal(adult.rng,rng); assert.equal(adult.recent.at(-1).text,`Grew into ${character===12?'trmy':'mametchi'}`);
+    assert.equal(JSON.stringify(s),before);
+    const resumed=ctx.run({trmnl:{state:clean(adult),user:{time_zone_iana:adult.timezone},system:{timestamp_utc:adult.cursor*60}}});
+    assert.equal(resumed.trmnl_state.version,1); assert.equal(resumed.trmnl_state.character,character);
+    assert.equal(resumed.pet.character,character===12?'trmy':'mametchi');
+    assert.deepEqual(clean(resumed.trmnl_state),{...clean(adult),timezone_fallback:false});
+  }
+  // A seed that can produce TRMY still leaves an existing adult and the Bill path intact.
+  for(let character=0;character<stats.length;character++) {
+    const s=character ? hatched(character,0) : fresh(0);
+    assert.equal(ctx.displayPet(s,s.cursor).character,clean(get('P1_NAMES'))[character]);
+  }
+  const mask=hatched(7,0); ctx.evolve(mask);
+  assert.equal(mask.character,11); assert.equal(ctx.displayPet(mask,mask.cursor).character,'bill');
+});
+test('TRMY has gentler needs while using normal P1 sleep, aging, death and rebirth', () => {
+  const s=hatched(12,0);
+  s.timers.hunger=1; s.timers.happy=1;
+  const next=ctx.advance(s,s.cursor+1);
+  assert.equal(next.hunger,11); assert.equal(next.happiness,11);
+  assert.equal(next.timers.hunger,180); assert.equal(next.timers.happy,210);
+  assert.ok(next.hunger_rate>stats[5][2]); assert.ok(next.happy_rate>stats[5][3]);
+  const bedtime=hatched(12,0); bedtime.timezone='UTC';
+  bedtime.cursor=Date.parse('2026-10-18T21:59Z')/60000;
+  const asleep=ctx.advance(bedtime,bedtime.cursor+1);
+  assert.equal(asleep.sleeping,true);
+  const wake=ctx.advance(asleep,asleep.cursor+11*60);
+  assert.equal(wake.sleeping,false); assert.equal(wake.age,asleep.age+1);
+  assert.equal(wake.timers.growth,asleep.timers.growth);
+  const old=hatched(12,0); old.sleeping=true; old.timers.growth=0;
+  ctx.minuteTick(old,540);
+  assert.equal(old.hunger_rate,135); assert.equal(old.happy_rate,158);
+  old.adult_care=4; old.timers.attention=14;
+  const dead=ctx.advance(old,old.cursor+2);
+  assert.equal(dead.dead_at,old.cursor+2);
+  const angel=ctx.displayPet(dead,dead.cursor);
+  assert.equal(angel.character,'dead'); assert.equal(angel.sprite_transform,'translate(8 4)');
+  const reborn=ctx.advance(dead,dead.cursor+60);
+  assert.equal(reborn.character,0); assert.equal(reborn.generation,2);
+});
+test('TRMY alternates its two idle poses at the P1 cadence and shares the original care overlays', () => {
+  const s=hatched(12,0);
+  const baseline=ctx.displayPet(s,s.cursor);
+  const same=ctx.displayPet({...s,cursor:s.cursor+14},s.cursor+14);
+  const next=ctx.displayPet({...s,cursor:s.cursor+15},s.cursor+15);
+  const cycle=ctx.displayPet({...s,cursor:s.cursor+30},s.cursor+30);
+  assert.equal(baseline.sprite_path,same.sprite_path);
+  assert.notEqual(baseline.sprite_path,next.sprite_path);
+  assert.equal(baseline.sprite_path,cycle.sprite_path);
+  assert.match(baseline.sprite_transform,/ scale\(0\.5\)$/);
+  const normal=hatched(5,0);
+  for(const sleeping of [false,true]) for(const sick of [false,true]) {
+    Object.assign(s,{sleeping,sick,poop:1}); s.timers.scold=1;
+    Object.assign(normal,{sleeping,sick,poop:1}); normal.timers.scold=1;
+    const before=JSON.stringify(s);
+    const trmy=ctx.displayPet(s,s.cursor),p1=ctx.displayPet(normal,normal.cursor);
+    for(const field of ['sleep_path','poop_path','discipline_path','status','notice','food_path','joy_path']) assert.equal(trmy[field],p1[field],field);
+    assert.equal(trmy.frame,sleeping?2:sick?4:3);
+    assert.equal(JSON.stringify(s),before);
+    const run=ctx.run({trmnl:{state:clean(s),user:{time_zone_iana:s.timezone},system:{timestamp_utc:s.cursor*60}}});
+    assert.equal(run.pet.character,'trmy');
+    assert.deepEqual(clean(run.trmnl_state),{...clean(s),timezone_fallback:false});
+  }
+});
+test('TRMY expressions follow sleep, illness, cleanup and care-call priority without changing the life', () => {
+  const s=hatched(12,0),sprites=clean(get('P1_SPRITES'));
+  const show=expected=>{
+    const before=JSON.stringify(s),pet=ctx.displayPet(s,s.cursor);
+    assert.equal(pet.frame,expected); assert.equal(pet.sprite_path,sprites.trmy[expected]);
+    assert.equal(JSON.stringify(s),before);
+    return pet;
+  };
+  Object.assign(s,{sleeping:true,sick:true,poop:1,hunger:0,happiness:0,activity:'Playing a game',activity_until:s.cursor+4});
+  s.timers.scold=1;
+  assert.ok(show(2).sleep_path); // Sleep has priority even with illness and cleanup pending.
+  s.sleeping=false; assert.ok(show(4).poop_path);
+  s.sick=false; assert.ok(show(3).discipline_path);
+  s.poop=0; show(5);
+  s.timers.scold=0; show(5); // Empty food and joy override the play reaction.
+  s.hunger=15; show(5);
+  s.happiness=15; show(7);
+  ctx.die(s,'Test end of life');
+  const dead=ctx.displayPet(s,s.cursor);
+  assert.equal(dead.character,'dead'); assert.ok(dead.frame<2);
+  assert.equal(dead.sprite_path,sprites.dead[dead.frame]);
+  assert.equal(dead.poop_path,''); assert.equal(dead.sleep_path,'');
+});
+test('actual TRMY meals, play and care select reactions that expire after one refresh interval', () => {
+  const cases=[
+    ['feed',s=>{s.hunger=11;},6], ['play',s=>{s.happiness=11;},7],
+    ['clean',s=>{s.poop=1;},6], ['medicine',s=>{s.sick=true;},6],
+    ['discipline',s=>{s.timers.scold=1;},5],
+  ];
+  for(const [task,prepare,expected] of cases) {
+    const s=hatched(12,0); prepare(s); s.due={[task]:s.cursor};
+    ctx.serviceCare(s);
+    assert.equal(s.activity_until,s.cursor+4); // The original activity/care duration is unchanged.
+    const before=JSON.stringify(s);
+    assert.equal(ctx.displayPet(s,s.cursor).frame,expected,task);
+    assert.equal(ctx.displayPet({...s,cursor:s.cursor+14},s.cursor+14).frame,expected,task);
+    assert.ok(ctx.displayPet({...s,cursor:s.cursor+16},s.cursor+16).frame<2,task);
+    assert.equal(JSON.stringify(s),before);
+  }
+  for(let character=0;character<12;character++) {
+    const s=character ? hatched(character,0) : fresh(0);
+    Object.assign(s,{sleeping:true,sick:true,poop:1,activity:'Playing a game',activity_until:s.cursor+4});
+    const pet=ctx.displayPet(s,s.cursor);
+    assert.ok(pet.frame<2); // Situational TRMY poses do not alter the original characters.
+  }
+});
+
 test('every display payload fits the conservative 5 KB merge-variable limit', () => {
-  for(let character=0;character<=11;character++) {
-    const s=character===0 ? fresh() : hatched(character);
-    for(const sleeping of [false,true]) {
-      s.poop=8; s.timers.scold=1; s.sleeping=sleeping;
-      const pet=ctx.displayPet(s,s.cursor);
-      assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`character ${character}, sleeping ${sleeping}`);
+  for(const seed of [42,90]) for(let character=0;character<stats.length;character++) {
+    const s=character===0 ? fresh(seed) : hatched(character,seed);
+    for(const sleeping of [false,true]) for(const needs of [0,15]) {
+      s.poop=8; s.timers.scold=1; s.sleeping=sleeping; s.hunger=needs; s.happiness=needs;
+      s.sick=true; s.timezone_fallback=true;
+      const pet=ctx.displayPet(s,s.cursor+200*1440);
+      assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`seed ${seed}, character ${character}, sleeping ${sleeping}, needs ${needs}`);
     }
   }
 });
 
-const {render,fixture,devices,layouts}=require('../scripts/preview.cjs');
+const {render,fixture,devices,layouts,moods}=require('../scripts/preview.cjs');
+test('all eight TRMY expressions fit the merge-variable budget with only the current path in the payload',()=>{
+  const frames=clean(get('P1_SPRITES.trmy')),seen=new Set();
+  for(const mood of Object.keys(moods)) for(const step of [0,15]) {
+    const s=fixture('trmy',mood); s.cursor+=step; s.timezone_fallback=true;
+    const pet=ctx.displayPet(s,s.cursor+200*1440);
+    seen.add(pet.frame);
+    assert.equal(Object.values(pet).filter(value=>frames.includes(value)).length,1,mood);
+    assert.equal(pet.sprite_path,frames[pet.frame],mood);
+    assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`${mood}, frame ${pet.frame}`);
+  }
+  assert.equal(seen.size,8);
+});
 test('all device/layout/character states render the actual templates without missing variables',()=>{
   for(const device of Object.keys(devices)) for(const layout of layouts) {
-    for(const character of ['egg','babytchi','marutchi','tamatchi','kuchitamatchi','mametchi','ginjirotchi','maskutchi','kuchipatchi','nyorotchi','tarakotchi','bill','dead']) {
-      for(const mood of ['awake','sleeping','sick','poop','discipline','poop-discipline','sleeping-poop','timezone-unavailable']) {
+    for(const character of [...clean(get('P1_NAMES')),'dead']) {
+      for(const mood of Object.keys(moods)) {
         const {html,width,height}=render({device,layout,character,mood});
         assert.ok(width>0 && height>0); assert.ok(!html.includes('{{')); assert.ok(!html.includes('undefined'));
         assert.match(html,/<path d="M/); assert.ok(!/<script/.test(html));
@@ -340,12 +503,13 @@ test('all device/layout/character states render the actual templates without mis
 });
 test('care indicators fit beside every pet pose and appear in every layout',()=>{
   const sprites=clean(get('P1_SPRITES'));
-  for(let character=1;character<=11;character++) for(let minute=0;minute<210;minute+=15) {
-    const s=hatched(character); s.cursor+=minute; s.poop=1; s.timers.scold=1;
+  for(const seed of [42,90]) for(let character=1;character<stats.length;character++) for(let minute=0;minute<210;minute+=15) {
+    const s=hatched(character,seed); s.cursor+=minute; s.poop=1; s.timers.scold=1;
     const pet=ctx.displayPet(s,s.cursor);
     const x=Number(pet.sprite_transform.match(/translate\((\d+)/)[1]);
+    const scale=pet.sprite_transform.includes('scale(0.5)') ? 0.5 : 1;
     const points=[...pet.sprite_path.matchAll(/M(\d+) (\d+)h1v1h-1z/g)];
-    assert.ok(points.every(p=>x+Number(p[1])<24)); // Poop begins at x=24, call at x=27.
+    assert.ok(points.every(p=>x+(Number(p[1])+1)*scale<=24)); // Poop begins at x=24, call at x=27.
     assert.equal(pet.poop_path,sprites.poop);
   }
   for(const device of Object.keys(devices)) for(const layout of layouts) {

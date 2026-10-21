@@ -13,6 +13,13 @@ const devices = { og: [800,480], x: [1872,1404], portrait: [1404,1872] };
 const frameworkVersion = '3.4.3';
 const assetRoot = path.join(root, '.cache/framework', frameworkVersion);
 const layouts = ['full','half_horizontal','half_vertical','quadrant'];
+const moods = {
+  awake: 'Awake', poop: 'Needs cleaning', discipline: 'Discipline call',
+  'poop-discipline': 'Cleaning + discipline', sleeping: 'Sleeping', 'sleeping-poop': 'Sleeping + poop',
+  sick: 'Unwell', feeding: 'Having a meal', playing: 'Playing a game',
+  hungry: 'Hungry', bored: 'Bored', cleaned: 'Fresh and clean', recovering: 'Feeling better',
+  scolded: 'Learning manners', 'timezone-unavailable': 'Time zone unavailable',
+};
 const base = Date.parse('2026-10-18T09:00:00Z') / 60000;
 const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function fixture(character = 'mametchi', mood = 'awake', seed = 42) {
@@ -26,6 +33,10 @@ function fixture(character = 'mametchi', mood = 'awake', seed = 42) {
   if (['poop','poop-discipline','sleeping-poop'].includes(mood)) s.poop = 1;
   if (['discipline','poop-discipline'].includes(mood)) s.timers.scold = 1;
   if (mood === 'sick') s.sick = true;
+  if (mood === 'hungry') s.hunger = 0;
+  if (mood === 'bored') s.happiness = 0;
+  const activities = {feeding:'Having a meal',playing:'Playing a game',cleaned:'Fresh and clean',recovering:'Feeling better after 1 dose',scolded:'Learning manners'};
+  if (activities[mood]) { s.activity = activities[mood]; s.activity_until = s.cursor + 4; }
   if (mood === 'timezone-unavailable') { s.timezone = 'UTC'; s.timezone_fallback = true; }
   return s;
 }
@@ -59,7 +70,7 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
 <label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='mametchi'?'selected':''}>${x}</option>`).join('')}</select></label>
-<label>Display state<select id="mood"><option value="awake">Awake</option><option value="poop">Needs cleaning</option><option value="discipline">Discipline call</option><option value="poop-discipline">Cleaning + discipline</option><option value="sleeping">Sleeping</option><option value="sleeping-poop">Sleeping + poop</option><option value="sick">Unwell</option><option value="timezone-unavailable">Time zone unavailable</option></select></label></div>
+<label>Display state<select id="mood">${Object.entries(moods).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
 <main class="preview-wrap"><div class="preview-frame" id="holder"><iframe id="screen" title="TRMNL display"></iframe></div></main>
 <details><summary>Saved state and recent events</summary><pre id="state"></pre></details>
@@ -101,4 +112,4 @@ if(require.main===module) {
   require('node:child_process').execFileSync('python3',[path.join(__dirname,'preview-assets.py'),assetRoot,frameworkVersion],{stdio:'inherit'});
   server().listen(8766,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8766'));
 }
-module.exports={render,fixture,server,devices,layouts};
+module.exports={render,fixture,server,devices,layouts,moods};

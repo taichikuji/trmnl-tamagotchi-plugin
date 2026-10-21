@@ -57,8 +57,32 @@ Each generation gets a seeded caretaker. Care history determines evolution, and 
 
 Progress follows elapsed time, so changing the refresh frequency does not change care decisions. Force Refresh preserves the pet; **Clear Saved State** starts a new life. See the [rule table](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Lifecycle-rules) for the researched rules and adaptations, and [verification progress](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Verification) for the hosted checks completed so far.
 
+TRMY is an alternative perfect-care adult alongside Mametchi. When the Mametchi-eligible Tamatchi teen reaches adulthood with **zero care mistakes and zero missed discipline calls**, its life seed chooses evenly between Mametchi and TRMY. Mametchi-eligible teens with one or two care mistakes still become Mametchi. All other evolution branches, including the secret adult, keep their original outcomes. The choice happens during normal evolution and is saved as the character itself; existing adults keep their current identities after updating.
+
+TRMY has its own entry in the same character, stats, sprites and growth tables. Its hunger drops every **180 awake minutes** and happiness every **210 awake minutes**, compared with Mametchi's 81 and 91. It sleeps **22:00–09:00** in the account time zone, starts fully disciplined, and takes one medicine dose per treatment. Illness and adult aging countdowns are both 4,095 awake minutes, within the original P1 timer ranges. It uses the same cleanup, illness, aging, death and rebirth mechanics as the other pets. Aging eventually accelerates its needs too.
+
+TRMY's eight expressions are complete 32×32 SVG pixel paths in the same `P1_SPRITES` table. **Unamused** and **cheerful** alternate at the original 15-minute idle cadence; care states and recent activities select the other expressions:
+
+| Expression | When it appears |
+| --- | --- |
+| Unamused / cheerful | Ordinary idle poses |
+| Sleepy | Sleeping, with the original Z indicator |
+| Fainted | Illness |
+| Squinting | Cleanup is pending, beside the original poop indicator |
+| Skeptical | Discipline calls, empty food/joy, or just after scolding |
+| Delighted | Having a meal, freshly cleaned, or recovering after medicine |
+| Starry | Playing a game |
+
+Sleep takes priority over illness, then cleanup, then discipline/empty needs, then activity reactions. Brief meal, play and successful-care reactions remain visible for up to **15 simulated minutes** so a normal refresh can catch them. This display-only extension uses the existing activity timestamp; care timings, random decisions and saved-state fields are unchanged.
+
+Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Sleep Z, poop, discipline and the death angel reuse the original artwork. The original P1 extraction script assembles upper and lower tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
+
+Run `node scripts/preview.cjs` from the repository root and select **trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
+
 ## Trademark and artwork notice
 
 TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. The MIT license covers original code and documentation; third-party material retains its own terms. See [LICENSE](../LICENSE) and the [full notice](../README.md#trademark-and-artwork-notice).
+
+TRMY is the TRMNL mascot. Its supplied pixel-art redraws are separate from the original Bandai P1 artwork; adding this fan-made appearance does not imply TRMNL endorsement.
 
 Public recipe publication remains deferred. For support, [open a GitHub issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues). Local preview, verification and publishing instructions are in the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development).

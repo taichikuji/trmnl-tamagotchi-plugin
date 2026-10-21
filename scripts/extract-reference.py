@@ -83,6 +83,9 @@ transform = root / 'TRMNL/src/transform.js'
 text = transform.read_text()
 start = text.index('// BEGIN P1_SPRITES')
 end = text.index('// END P1_SPRITES', start) + len('// END P1_SPRITES')
-embedded = '// BEGIN P1_SPRITES\nconst P1_SPRITES = ' + json.dumps(assets, separators=(',', ':')) + ';\n// END P1_SPRITES'
+# Retain project-added characters in the same table while rebuilding the original P1 artwork.
+existing = json.loads(re.search(r'const P1_SPRITES = (\{.*?\});', text[start:end], re.S).group(1))
+assets.update({name: frames for name, frames in existing.items() if name not in assets})
+embedded = '// BEGIN P1_SPRITES\nconst P1_SPRITES = ' + json.dumps(assets, indent=2) + ';\n// END P1_SPRITES'
 transform.write_text(text[:start] + embedded + text[end:])
 print('Updated factual reference and embedded sprite paths in transform.js.')

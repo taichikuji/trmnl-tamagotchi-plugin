@@ -5,6 +5,7 @@ Your nostalgic friend on TRMNL! A P1-style virtual pet with full, half and quadr
 ## Features
 
 - Original P1 pixel artwork
+- TRMY as an alternative perfect-care adult, with eight 32×32 care expressions
 - A seeded caretaker with attentive, inconsistent or neglectful care
 - Evolution shaped by care history
 - Food, joy, age and generation indicators
