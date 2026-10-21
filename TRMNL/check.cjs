@@ -416,7 +416,10 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^refresh_interval: 15$/m);
   assert.ok(!/^id:/m.test(settings));
   assert.doesNotMatch(settings,/keyname: timezone|Time zone override/);
-  assert.match(settings,/href="https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/issues"/);
+  assert.match(settings,/^- keyname: plugin_info$/m);
+  assert.match(settings,/^  field_type: author_bio$/m);
+  assert.match(settings,/^  github_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin$/m);
+  assert.match(settings,/^  learn_more_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/tree\/main\/TRMNL#setup$/m);
 });
 test('the flat import ZIP includes and executes its standalone Serverless script', () => {
   const os=require('node:os');
