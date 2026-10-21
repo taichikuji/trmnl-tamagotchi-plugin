@@ -104,10 +104,10 @@ function serviceCare(s) {
     if (task === 'medicine') {
       if (!s.sick) continue;
       // Caretaker gives all required doses; dose count follows character medicine nibble.
-      let value = 15;
-      do { value = ((value | 8) + P1_STATS[s.character][8]) & 15; } while (value & 8);
+      let value = 15, doses = 0;
+      do { value = ((value | 8) + P1_STATS[s.character][8]) & 15; doses++; } while (value & 8);
       s.sick = false; s.timers.illness = P1_STATS[s.character][4];
-      s.activity = 'Feeling better';
+      s.activity = `Feeling better after ${doses} dose${doses === 1 ? '' : 's'}`;
     } else if (task === 'discipline') {
       if (!s.timers.scold) continue;
       s.timers.scold = 0; s.discipline = Math.min(15, s.discipline + 4);
