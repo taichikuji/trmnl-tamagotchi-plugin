@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches:
+      - main
+    # Source and media pushes run this workflow through publish.yml.
+    paths:
+      - "TRMNL/check.cjs"
+      - "TRMNL/fixtures/**"
+      - "TRMNL/.trmnlp.yml"
+      - "scripts/**"
+      - ".github/workflows/test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run complete test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Test
+        run: node --test TRMNL/check.cjs

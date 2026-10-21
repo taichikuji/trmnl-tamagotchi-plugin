@@ -14,8 +14,12 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   publish:
     name: Push plugin to TRMNL
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
