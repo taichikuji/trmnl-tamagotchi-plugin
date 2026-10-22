@@ -79,6 +79,30 @@ Only the current expression's path is sent to the display. A `scale(0.5)` transf
 
 Run `node scripts/preview.cjs` from the repository root and select **trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
 
+## Character appearance rates
+
+A simulation of **10,000 complete lives** at [commit `a288353`](https://github.com/taichikuji/trmnl-tamagotchi-plugin/commit/a288353d7c74129507a28acf9389e08d2bc0bf1d) produced the results below. Each life started as a fresh egg and ran until its first death, using the normal automatic caretaker, varied seeds and start times across October 18, 2026 (UTC), and the `Europe/Madrid` time zone.
+
+Each percentage is the share of all 10,000 lives that reached that character at least once. The percentages overlap because a life passes through several characters; a life reaching Bill also counts toward Maskutchi. These are estimates for the sampled conditions, and an existing life follows its saved seed and care history.
+
+| Character | Lives reaching character | Percentage |
+| --- | ---: | ---: |
+| Egg | 10,000 | 100.00% |
+| Babytchi | 10,000 | 100.00% |
+| Marutchi | 10,000 | 100.00% |
+| Tamatchi | 6,198 | 61.98% |
+| Kuchitamatchi | 3,209 | 32.09% |
+| Tarakotchi | 2,705 | 27.05% |
+| Maskutchi | 2,142 | 21.42% |
+| Bill | 1,872 | 18.72% |
+| Mametchi | 1,645 | 16.45% |
+| TRMY | 1,486 | 14.86% |
+| Nyorotchi | 303 | 3.03% |
+| Ginjirotchi | 207 | 2.07% |
+| Kuchipatchi | 22 | 0.22% |
+
+Every character appeared naturally in this sample. **1,490 lives (14.90%) ended before adulthood.**
+
 ## Trademark and artwork notice
 
 TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co., Ltd.; its characters and original artwork belong to BANDAI. This project is not affiliated with, sponsored by, or endorsed by BANDAI or Bandai Namco. The MIT license covers original code and documentation; third-party material retains its own terms. See [LICENSE](../LICENSE) and the [full notice](../README.md#trademark-and-artwork-notice).
