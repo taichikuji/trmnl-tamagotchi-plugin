@@ -390,7 +390,7 @@ test('TRMY has gentler needs while using normal P1 sleep, aging, death and rebir
   const dead=ctx.advance(old,old.cursor+2);
   assert.equal(dead.dead_at,old.cursor+2);
   const angel=ctx.displayPet(dead,dead.cursor);
-  assert.equal(angel.character,'dead'); assert.equal(angel.sprite_transform,'translate(8 4)');
+  assert.equal(angel.character,'dead'); assert.equal(angel.sprite_transform,'translate(8 4) scale(0.5)');
   const reborn=ctx.advance(dead,dead.cursor+60);
   assert.equal(reborn.character,0); assert.equal(reborn.generation,2);
 });
@@ -410,7 +410,9 @@ test('TRMY alternates its two idle poses at the P1 cadence and shares the origin
     Object.assign(normal,{sleeping,sick,poop:1}); normal.timers.scold=1;
     const before=JSON.stringify(s);
     const trmy=ctx.displayPet(s,s.cursor),p1=ctx.displayPet(normal,normal.cursor);
-    for(const field of ['sleep_path','poop_path','discipline_path','status','notice','food_path','joy_path']) assert.equal(trmy[field],p1[field],field);
+    for(const field of ['poop_path','discipline_path','status','notice','food_path','joy_path']) assert.equal(trmy[field],p1[field],field);
+    assert.equal(trmy.sleep_path,''); // The hand-drawn sleeping sprite already contains its Zzz.
+    assert.equal(Boolean(p1.sleep_path),sleeping);
     assert.equal(trmy.frame,sleeping?2:sick?4:3);
     assert.equal(JSON.stringify(s),before);
     const run=ctx.run({trmnl:{state:clean(s),user:{time_zone_iana:s.timezone},system:{timestamp_utc:s.cursor*60}}});
@@ -428,23 +430,26 @@ test('TRMY expressions follow sleep, illness, cleanup and care-call priority wit
   };
   Object.assign(s,{sleeping:true,sick:true,poop:1,hunger:0,happiness:0,activity:'Playing a game',activity_until:s.cursor+4});
   s.timers.scold=1;
-  assert.ok(show(2).sleep_path); // Sleep has priority even with illness and cleanup pending.
+  assert.equal(show(2).sleep_path,''); // Sleep has priority; its Zzz are part of the sprite.
   s.sleeping=false; assert.ok(show(4).poop_path);
   s.sick=false; assert.ok(show(3).discipline_path);
   s.poop=0; show(5);
-  s.timers.scold=0; show(5); // Empty food and joy override the play reaction.
-  s.hunger=15; show(5);
-  s.happiness=15; show(7);
+  s.timers.scold=0; show(6); // Empty food and joy show pleading instead of the play reaction.
+  s.hunger=15; show(6);
+  s.happiness=15; show(1);
   ctx.die(s,'Test end of life');
   const dead=ctx.displayPet(s,s.cursor);
-  assert.equal(dead.character,'dead'); assert.ok(dead.frame<2);
-  assert.equal(dead.sprite_path,sprites.dead[dead.frame]);
+  assert.equal(dead.character,'dead'); assert.equal(dead.frame,7);
+  assert.equal(dead.sprite_path,sprites.trmy[7]);
   assert.equal(dead.poop_path,''); assert.equal(dead.sleep_path,'');
+  const original=hatched(5,0); ctx.die(original,'Test end of life');
+  const angel=ctx.displayPet(original,original.cursor);
+  assert.equal(angel.sprite_path,sprites.dead[angel.frame]);
 });
 test('actual TRMY meals, play and care select reactions that expire after one refresh interval', () => {
   const cases=[
-    ['feed',s=>{s.hunger=11;},6], ['play',s=>{s.happiness=11;},7],
-    ['clean',s=>{s.poop=1;},6], ['medicine',s=>{s.sick=true;},6],
+    ['feed',s=>{s.hunger=11;},1], ['play',s=>{s.happiness=11;},1],
+    ['clean',s=>{s.poop=1;},1], ['medicine',s=>{s.sick=true;},1],
     ['discipline',s=>{s.timers.scold=1;},5],
   ];
   for(const [task,prepare,expected] of cases) {
@@ -480,8 +485,9 @@ test('every display payload fits the conservative 5 KB merge-variable limit', ()
 const {render,fixture,devices,layouts,moods}=require('../scripts/preview.cjs');
 test('all eight TRMY expressions fit the merge-variable budget with only the current path in the payload',()=>{
   const frames=clean(get('P1_SPRITES.trmy')),seen=new Set();
-  for(const mood of Object.keys(moods)) for(const step of [0,15]) {
+  for(const mood of [...Object.keys(moods),'dead']) for(const step of [0,15]) {
     const s=fixture('trmy',mood); s.cursor+=step; s.timezone_fallback=true;
+    if(mood==='dead') ctx.die(s,'Test end of life');
     const pet=ctx.displayPet(s,s.cursor+200*1440);
     seen.add(pet.frame);
     assert.equal(Object.values(pet).filter(value=>frames.includes(value)).length,1,mood);
