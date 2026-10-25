@@ -4,11 +4,11 @@ Your nostalgic friend on TRMNL. A P1-style virtual pet that hatches, eats, plays
 
 <a href="https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup"><img width="150" alt="Works with TRMNL" src="https://trmnl.com/images/brand/badges/light/works-with-trmnl/trmnl-badge-works-with-light.svg" /></a>
 
-[Set up a Private Plugin](TRMNL#setup) · Public recipe publication remains deferred.
+[Set up a Private Plugin](TRMNL/README.md#setup) · Public recipe publication remains deferred.
 
 ![TRMY with food, joy and age indicators on TRMNL](TRMNL/media/preview_full.webp)
 
-[All layout previews](TRMNL#previews).
+[All layout previews](TRMNL/README.md#previews).
 
 ## Settings
 
@@ -26,7 +26,7 @@ cd TRMNL
 trmnlp serve
 ```
 
-The local preview uses a fixed cheerful TRMY fixture. For the simulated lifecycle, selectable characters and verification commands, see the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development). Templates and settings live in [TRMNL/src/](TRMNL/src/); the [plugin guide](TRMNL#setup) covers importing and pet behavior.
+The local preview uses a fixed cheerful TRMY fixture. For the simulated lifecycle, selectable characters and verification commands, see the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development). Templates and settings live in [TRMNL/src/](TRMNL/src/); the [plugin guide](TRMNL/README.md#setup) covers importing and pet behavior.
 
 Based on [P1 reverse engineering](https://github.com/agg23/tamagotchi-disassembled) and [research findings](https://rhubarbtart.neocities.org/p1hackinglog). See the [lifecycle rules](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Lifecycle-rules) and [artwork sources](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Research-and-sources).
 
