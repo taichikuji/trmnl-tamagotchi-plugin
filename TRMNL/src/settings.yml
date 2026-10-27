@@ -10,6 +10,15 @@ framework_version: 3.4.3
 serverless_language: node
 refresh_interval: 15
 custom_fields:
+# TRMNL reuses recipe-master screens without an input field; author_bio does not count.
+# Keep this field even though the simulation needs no user configuration.
+- keyname: pet_instance
+  name: Pet
+  field_type: select
+  options:
+  - My own pet
+  default: my_own_pet
+  description: Raise a personal pet with its own progress.
 - keyname: plugin_info
   name: About This Plugin
   field_type: author_bio

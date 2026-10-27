@@ -183,6 +183,35 @@ test('Serverless initializes empty state, survives cleared merge variables and c
   awake.sleeping=true; assert.equal(ctx.displayPet(awake,start).sprite_transform,ctx.displayPet({...awake,cursor:start+15},start+15).sprite_transform);
   assert.ok(ctx.displayPet(awake,start).sleep_path);
 });
+test('installations with identical settings keep separate lives and ignore the recipe master display', () => {
+  const master=ctx.run({trmnl:{state:fresh(90),system:{timestamp_utc:(start+1440)*60}}});
+  const input=id=>({pet:clean(master.pet),trmnl:{
+    state:{},system:{timestamp_utc:(start+1440)*60},
+    plugin_settings:{id,custom_fields_values:{pet_instance:'my_own_pet'}},
+    user:{time_zone_iana:'Europe/Madrid'},previous_merge_variables:{pet:clean(master.pet)}
+  }});
+  const aInput=input(123), bInput=input(456);
+  const a=ctx.run(aInput), b=ctx.run(bInput);
+  assert.equal(a.pet.character,'egg'); assert.equal(b.pet.character,'egg');
+  assert.equal(a.trmnl_state.generation,1); assert.equal(b.trmnl_state.generation,1);
+  assert.notEqual(a.trmnl_state.seed,b.trmnl_state.seed);
+  assert.notEqual(a.trmnl_state.seed,master.trmnl_state.seed);
+  assert.deepEqual(aInput.trmnl.state,{}); assert.deepEqual(bInput.trmnl.state,{});
+  const before=clean({a,b,master});
+  const resumed=ctx.run({trmnl:{state:a.trmnl_state,system:{timestamp_utc:(start+1455)*60},
+    plugin_settings:aInput.trmnl.plugin_settings,user:aInput.trmnl.user}});
+  assert.equal(resumed.pet.character,'babytchi');
+  assert.equal(resumed.trmnl_state.seed,a.trmnl_state.seed);
+  assert.equal(resumed.trmnl_state.born,a.trmnl_state.born);
+  assert.deepEqual(clean({a,b,master}),before);
+  const legacy=hatched(5);
+  const kept=ctx.run({trmnl:{state:legacy,system:{timestamp_utc:start*60},
+    plugin_settings:aInput.trmnl.plugin_settings,user:aInput.trmnl.user}});
+  assert.deepEqual(clean(kept.trmnl_state),{...legacy,timezone_fallback:false});
+  const alternate=input(undefined); alternate.trmnl.user.plugin_setting_id=789;
+  assert.equal(ctx.run(alternate).trmnl_state.seed,ctx.hashSeed(`789:${start+1440}`));
+});
+
 test('bad state, version, timestamps and timezone fail without mutating saved data', () => {
   for(const previous of [null,[],{version:99},{...fresh(),hunger:-1},{...fresh(),timers:{}},{...fresh(),timezone:'Mars/Olympus'},{...fresh(),timezone_fallback:'yes'}]) {
     const before=JSON.stringify(previous);
@@ -604,6 +633,16 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^  github_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin$/m);
   assert.match(settings,/^  learn_more_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/tree\/main\/TRMNL#setup$/m);
 });
+test('recipe has an input field to prevent TRMNL from reusing the recipe master screens', () => {
+  const settings=fs.readFileSync(path.join(root,'TRMNL/src/settings.yml'),'utf8');
+  const field=settings.split(/(?=^- keyname: )/m).find(field=>field.startsWith('- keyname: pet_instance\n'));
+  assert.ok(field,'author_bio alone does not enable per-install rendering and saved state');
+  assert.match(field,/^  field_type: select$/m);
+  assert.match(field,/^  default: my_own_pet$/m);
+  assert.match(field,/^  options:\n  - My own pet$/m);
+  assert.doesNotMatch(field,/^  optional: true$/m);
+});
+
 test('the flat import ZIP includes and executes its standalone Serverless script', () => {
   const os=require('node:os');
   const {execFileSync}=require('node:child_process');
@@ -615,6 +654,7 @@ test('the flat import ZIP includes and executes its standalone Serverless script
     const archive=JSON.parse(execFileSync('python3',['-c',inspect,zipPath],{encoding:'utf8'}));
     assert.deepEqual(archive.names.sort(),['full.liquid','half_horizontal.liquid','half_vertical.liquid','quadrant.liquid','settings.yml','shared.liquid','transform.js'].sort());
     assert.equal(archive.source,source);
+    assert.equal(archive.settings,fs.readFileSync(path.join(root,'TRMNL/src/settings.yml'),'utf8').replace('icon: media/icon.svg\n',''));
     assert.doesNotMatch(archive.settings,/^icon:|keyname: timezone/m);
     const hosted=vm.createContext({Intl,Date});
     vm.runInContext(archive.source,hosted);
