@@ -37,6 +37,10 @@ All four layouts use native Framework 3.4.3 utilities and crisp SVG artwork. Ser
 
 ## Setup
 
+Install the [published recipe](https://trmnl.com/recipes/510825), keep **Pet → My own pet** selected and add it to your playlist. Each installation has its own pet and saved progress; two devices using the same installation show the same pet. Separate pets need separate installations.
+
+### Private import or manual setup
+
 Create a Private Plugin with **Static** data `{}`, Framework **3.4.3**, **Node** Serverless and a **15-minute** refresh interval. Private plugins require Developer or BYOD access.
 
 Generate the import package from the repository root:
@@ -50,6 +54,16 @@ In TRMNL, choose **Plugins → Private Plugins → Import new** and upload `dist
 For manual setup, copy the values from [settings.yml](src/settings.yml) into the dashboard, paste [shared.liquid](src/shared.liquid) into Shared and each layout into its matching markup tab. Paste the complete [transform.js](src/transform.js) into **Serverless** and select **Node**.
 
 Save, Force Refresh and add the plugin to your playlist. Sleep follows your TRMNL account time zone automatically; no time zone input is needed. If TRMNL temporarily omits it, the pet keeps its saved time zone. A new installation without usable time zone metadata displays **Time zone unavailable · sleep uses UTC** until account metadata becomes available.
+
+### Existing installs showing the author's pet
+
+The original recipe had only an About field. TRMNL [reuses the recipe master's screens when there are no input fields](https://help.trmnl.com/en/articles/16777795-saved-state), leaving the install's saved state empty. The **Pet** selector is required to get a separate simulation even though it has only one option. Keep it in the recipe; the About field alone is insufficient.
+
+After the updated recipe is published, open the installed plugin's settings, save **Pet → My own pet** and Force Refresh. If it still shows the author's pet, install a new copy of the updated recipe and add that copy to your playlist. Confirm the new copy progresses independently before removing the old playlist entry. Whether existing installs switch automatically needs verification on hosted TRMNL.
+
+An empty save starts at **Egg · Gen 1** and hatches after five elapsed minutes, visible on the next refresh. Existing valid saves continue unchanged. Do not use **Clear Saved State** to apply this fix: that resets an actual pet and does not address shared recipe screens.
+
+Before considering the rollout verified, test two separate TRMNL accounts with the same **My own pet** selection. Each must start a new life, progress across refreshes and retain its own birth time, seed and cursor in `trmnl.state`; also test an installation made before the update. Local tests cover the field, packaged settings, separate transform inputs and preservation of valid saves, but cannot exercise TRMNL's hosted recipe rendering or installation migration.
 
 ## Pet behavior
 
@@ -109,4 +123,4 @@ TRMNLGotchi is an unofficial fan project. Tamagotchi is a trademark of BANDAI Co
 
 TRMY is the TRMNL mascot. Its supplied pixel-art redraws are separate from the original Bandai P1 artwork; adding this fan-made appearance does not imply TRMNL endorsement.
 
-Public recipe publication remains deferred. For support, [open a GitHub issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues). Local preview, verification and publishing instructions are in the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development).
+For support, [open a GitHub issue](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues). Local preview, verification and publishing instructions are in the [development guide](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Development).
