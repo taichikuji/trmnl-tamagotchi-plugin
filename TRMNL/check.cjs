@@ -179,9 +179,9 @@ test('Serverless initializes empty state, survives cleared merge variables and c
   const snapshot=JSON.stringify(next.trmnl_state);
   const p1=ctx.displayPet(next.trmnl_state,start+15),p2=ctx.displayPet(next.trmnl_state,start+15);
   assert.deepEqual(clean(p1),clean(p2)); assert.equal(JSON.stringify(next.trmnl_state),snapshot);
-  const awake=hatched(5); assert.notEqual(ctx.displayPet(awake,start).sprite_transform,ctx.displayPet({...awake,cursor:start+15},start+15).sprite_transform);
-  awake.sleeping=true; assert.equal(ctx.displayPet(awake,start).sprite_transform,ctx.displayPet({...awake,cursor:start+15},start+15).sprite_transform);
-  assert.ok(ctx.displayPet(awake,start).sleep_path);
+  const awake=hatched(5); assert.notEqual(ctx.displayPet(awake,start).sprite.transform,ctx.displayPet({...awake,cursor:start+15},start+15).sprite.transform);
+  awake.sleeping=true; assert.equal(ctx.displayPet(awake,start).sprite.transform,ctx.displayPet({...awake,cursor:start+15},start+15).sprite.transform);
+  assert.ok(ctx.displayPet(awake,start).sprite.sleep_path);
 });
 test('installations with identical settings keep separate lives and ignore the recipe master display', () => {
   const master=ctx.run({trmnl:{state:fresh(90),system:{timestamp_utc:(start+1440)*60}}});
@@ -228,36 +228,36 @@ test('care indicators follow actual cleanup and discipline calls without changin
   s.due={clean:s.cursor+2,discipline:s.cursor+2};
   const before=JSON.stringify(s);
   const active=ctx.displayPet(s,s.cursor);
-  assert.ok(active.poop_path); assert.ok(active.discipline_path);
+  assert.ok(active.sprite.poop_path); assert.ok(active.sprite.discipline_path);
   assert.match(active.status,/Calling for discipline.*Needs cleaning/);
   assert.equal(JSON.stringify(s),before); // No saved-state or RNG mutations when drawing.
   assert.deepEqual(clean(ctx.displayPet(ctx.advance(s,s.cursor),s.cursor)),clean(active));
   const waiting=ctx.advance(s,s.cursor+1);
-  assert.ok(ctx.displayPet(waiting,waiting.cursor).poop_path);
-  assert.ok(ctx.displayPet(waiting,waiting.cursor).discipline_path);
+  assert.ok(ctx.displayPet(waiting,waiting.cursor).sprite.poop_path);
+  assert.ok(ctx.displayPet(waiting,waiting.cursor).sprite.discipline_path);
   const cared=ctx.advance(s,s.cursor+2);
   assert.equal(cared.poop,0); assert.equal(cared.timers.scold,0);
   const clear=ctx.displayPet(cared,cared.cursor);
-  assert.equal(clear.poop_path,''); assert.equal(clear.discipline_path,'');
+  assert.equal(clear.sprite.poop_path,''); assert.equal(clear.sprite.discipline_path,'');
   assert.doesNotMatch(clear.status,/Calling for discipline|Needs cleaning/);
   // A delayed refresh shows the current state, not an expired call or stale care task.
   s.due={discipline:s.cursor+100}; s.timers.scold=14;
   const expired=ctx.advance(s,s.cursor+1);
   assert.equal(expired.missed_discipline,1);
-  assert.equal(ctx.displayPet(expired,expired.cursor).discipline_path,'');
+  assert.equal(ctx.displayPet(expired,expired.cursor).sprite.discipline_path,'');
   s.sleeping=true;
   const asleep=ctx.displayPet(s,s.cursor);
-  assert.ok(asleep.poop_path); assert.ok(asleep.sleep_path); assert.equal(asleep.discipline_path,'');
+  assert.ok(asleep.sprite.poop_path); assert.ok(asleep.sprite.sleep_path); assert.equal(asleep.sprite.discipline_path,'');
   for(const character of [0,1]) {
     const pet=ctx.displayPet({...s,character,sleeping:false},s.cursor);
-    assert.equal(pet.discipline_path,'');
-    if(character===0) assert.equal(pet.poop_path,'');
+    assert.equal(pet.sprite.discipline_path,'');
+    if(character===0) assert.equal(pet.sprite.poop_path,'');
   }
   ctx.die(s,'Test end of life');
   const dead=ctx.displayPet(s,s.cursor);
-  assert.equal(dead.poop_path,''); assert.equal(dead.discipline_path,''); assert.equal(dead.sleep_path,'');
+  assert.equal(dead.sprite.poop_path,''); assert.equal(dead.sprite.discipline_path,''); assert.equal(dead.sprite.sleep_path,'');
   const reborn=ctx.advance(s,s.cursor+60);
-  assert.equal(ctx.displayPet(reborn,reborn.cursor).poop_path,'');
+  assert.equal(ctx.displayPet(reborn,reborn.cursor).sprite.poop_path,'');
 });
 test('account timezone is automatic, ignores the removed override and survives missing or invalid metadata', () => {
   const result=ctx.run({trmnl:{state:{},system:{timestamp_utc:start*60},plugin_settings:{id:123,custom_fields_values:{timezone:'America/New_York'}},user:{time_zone_iana:' Europe/Madrid '}}});
@@ -291,8 +291,8 @@ test('UTC fallback stays visible across refreshes and rebirth, and clears only w
     const next=ctx.run({trmnl:{state:dead,system:{timestamp_utc:(start+60)*60}}});
     assert.equal(next.trmnl_state.generation,2);
     assert.equal(next.trmnl_state.timezone_fallback,true);
-    assert.match(next.pet.notice,/Time zone unavailable · sleep uses UTC/);
-    assert.equal(next.pet.notice_visibility,'visible');
+    assert.match(next.pet.notice.text,/Time zone unavailable · sleep uses UTC/);
+    assert.equal(next.pet.notice.visibility,'visible');
     const recovered=ctx.run({trmnl:{state:next.trmnl_state,user:{time_zone_iana:'UTC'},system:{timestamp_utc:(start+60)*60}}});
     assert.equal(recovered.trmnl_state.timezone_fallback,false);
     assert.equal(recovered.pet.warning,'');
@@ -419,7 +419,7 @@ test('TRMY has gentler needs while using normal P1 sleep, aging, death and rebir
   const dead=ctx.advance(old,old.cursor+2);
   assert.equal(dead.dead_at,old.cursor+2);
   const angel=ctx.displayPet(dead,dead.cursor);
-  assert.equal(angel.character,'dead'); assert.equal(angel.sprite_transform,'translate(8 4) scale(0.5)');
+  assert.equal(angel.character,'dead'); assert.equal(angel.sprite.transform,'translate(8 4) scale(0.5)');
   const reborn=ctx.advance(dead,dead.cursor+60);
   assert.equal(reborn.character,0); assert.equal(reborn.generation,2);
 });
@@ -429,20 +429,23 @@ test('TRMY alternates its two idle poses at the P1 cadence and shares the origin
   const same=ctx.displayPet({...s,cursor:s.cursor+14},s.cursor+14);
   const next=ctx.displayPet({...s,cursor:s.cursor+15},s.cursor+15);
   const cycle=ctx.displayPet({...s,cursor:s.cursor+30},s.cursor+30);
-  assert.equal(baseline.sprite_path,same.sprite_path);
-  assert.notEqual(baseline.sprite_path,next.sprite_path);
-  assert.equal(baseline.sprite_path,cycle.sprite_path);
-  assert.match(baseline.sprite_transform,/ scale\(0\.5\)$/);
+  assert.equal(baseline.sprite.path,same.sprite.path);
+  assert.notEqual(baseline.sprite.path,next.sprite.path);
+  assert.equal(baseline.sprite.path,cycle.sprite.path);
+  assert.match(baseline.sprite.transform,/ scale\(0\.5\)$/);
   const normal=hatched(5,0);
   for(const sleeping of [false,true]) for(const sick of [false,true]) {
     Object.assign(s,{sleeping,sick,poop:1}); s.timers.scold=1;
     Object.assign(normal,{sleeping,sick,poop:1}); normal.timers.scold=1;
     const before=JSON.stringify(s);
     const trmy=ctx.displayPet(s,s.cursor),p1=ctx.displayPet(normal,normal.cursor);
-    for(const field of ['poop_path','discipline_path','status','notice','food_path','joy_path']) assert.equal(trmy[field],p1[field],field);
-    assert.equal(trmy.sleep_path,''); // The hand-drawn sleeping sprite already contains its Zzz.
-    assert.equal(Boolean(p1.sleep_path),sleeping);
-    assert.equal(trmy.frame,sleeping?2:sick?4:3);
+    for(const field of ['poop_path','discipline_path']) assert.equal(trmy.sprite[field],p1.sprite[field],field);
+    assert.equal(trmy.status,p1.status);
+    assert.deepEqual(clean(trmy.notice),clean(p1.notice));
+    assert.deepEqual(clean(trmy.needs),clean(p1.needs));
+    assert.equal(trmy.sprite.sleep_path,''); // The hand-drawn sleeping sprite already contains its Zzz.
+    assert.equal(Boolean(p1.sprite.sleep_path),sleeping);
+    assert.equal(trmy.sprite.frame,sleeping?2:sick?4:3);
     assert.equal(JSON.stringify(s),before);
     const run=ctx.run({trmnl:{state:clean(s),user:{time_zone_iana:s.timezone},system:{timestamp_utc:s.cursor*60}}});
     assert.equal(run.pet.character,'trmy');
@@ -453,27 +456,27 @@ test('TRMY expressions follow sleep, illness, cleanup and care-call priority wit
   const s=hatched(12,0),sprites=clean(get('P1_SPRITES'));
   const show=expected=>{
     const before=JSON.stringify(s),pet=ctx.displayPet(s,s.cursor);
-    assert.equal(pet.frame,expected); assert.equal(pet.sprite_path,sprites.trmy[expected]);
+    assert.equal(pet.sprite.frame,expected); assert.equal(pet.sprite.path,sprites.trmy[expected]);
     assert.equal(JSON.stringify(s),before);
     return pet;
   };
   Object.assign(s,{sleeping:true,sick:true,poop:1,hunger:0,happiness:0,activity:'Playing a game',activity_until:s.cursor+4});
   s.timers.scold=1;
-  assert.equal(show(2).sleep_path,''); // Sleep has priority; its Zzz are part of the sprite.
-  s.sleeping=false; assert.ok(show(4).poop_path);
-  s.sick=false; assert.ok(show(3).discipline_path);
+  assert.equal(show(2).sprite.sleep_path,''); // Sleep has priority; its Zzz are part of the sprite.
+  s.sleeping=false; assert.ok(show(4).sprite.poop_path);
+  s.sick=false; assert.ok(show(3).sprite.discipline_path);
   s.poop=0; show(5);
   s.timers.scold=0; show(6); // Empty food and joy show pleading instead of the play reaction.
   s.hunger=15; show(6);
   s.happiness=15; show(1);
   ctx.die(s,'Test end of life');
   const dead=ctx.displayPet(s,s.cursor);
-  assert.equal(dead.character,'dead'); assert.equal(dead.frame,7);
-  assert.equal(dead.sprite_path,sprites.trmy[7]);
-  assert.equal(dead.poop_path,''); assert.equal(dead.sleep_path,'');
+  assert.equal(dead.character,'dead'); assert.equal(dead.sprite.frame,7);
+  assert.equal(dead.sprite.path,sprites.trmy[7]);
+  assert.equal(dead.sprite.poop_path,''); assert.equal(dead.sprite.sleep_path,'');
   const original=hatched(5,0); ctx.die(original,'Test end of life');
   const angel=ctx.displayPet(original,original.cursor);
-  assert.equal(angel.sprite_path,sprites.dead[angel.frame]);
+  assert.equal(angel.sprite.path,sprites.dead[angel.sprite.frame]);
 });
 test('actual TRMY meals, play and care select reactions that expire after one refresh interval', () => {
   const cases=[
@@ -486,16 +489,16 @@ test('actual TRMY meals, play and care select reactions that expire after one re
     ctx.serviceCare(s);
     assert.equal(s.activity_until,s.cursor+4); // The original activity/care duration is unchanged.
     const before=JSON.stringify(s);
-    assert.equal(ctx.displayPet(s,s.cursor).frame,expected,task);
-    assert.equal(ctx.displayPet({...s,cursor:s.cursor+14},s.cursor+14).frame,expected,task);
-    assert.ok(ctx.displayPet({...s,cursor:s.cursor+16},s.cursor+16).frame<2,task);
+    assert.equal(ctx.displayPet(s,s.cursor).sprite.frame,expected,task);
+    assert.equal(ctx.displayPet({...s,cursor:s.cursor+14},s.cursor+14).sprite.frame,expected,task);
+    assert.ok(ctx.displayPet({...s,cursor:s.cursor+16},s.cursor+16).sprite.frame<2,task);
     assert.equal(JSON.stringify(s),before);
   }
   for(let character=0;character<12;character++) {
     const s=character ? hatched(character,0) : fresh(0);
     Object.assign(s,{sleeping:true,sick:true,poop:1,activity:'Playing a game',activity_until:s.cursor+4});
     const pet=ctx.displayPet(s,s.cursor);
-    assert.ok(pet.frame<2); // Situational TRMY poses do not alter the original characters.
+    assert.ok(pet.sprite.frame<2); // Situational TRMY poses do not alter the original characters.
   }
 });
 
@@ -512,16 +515,36 @@ test('every display payload fits the conservative 5 KB merge-variable limit', ()
 });
 
 const {render,fixture,devices,layouts,moods}=require('../scripts/preview.cjs');
+test('display values serialize with grouped needs, sprite data and notices without flat aliases',()=>{
+  const s=fixture('bill','timezone-unavailable');
+  const before=JSON.stringify(s);
+  const pet=clean(ctx.displayPet(s,s.cursor));
+  assert.equal(pet.name,'Bill'); assert.equal(pet.stage,'ADULT'); assert.equal(pet.generation,'1');
+  assert.equal(pet.age,'7d 0h'); assert.equal(pet.character,'bill');
+  assert.equal(pet.caretaker,clean(get('P1_PROFILES'))[s.profile]);
+  assert.equal(pet.status,'Enjoying the day');
+  assert.equal(pet.updated_at,new Date(s.cursor*60000).toISOString());
+  assert.equal(pet.next_event,`${pet.caretaker} caretaker`);
+  assert.equal(pet.needs.food.hearts,'♥♥♥♥'); assert.equal(pet.needs.joy.hearts,'♥♥♥♡');
+  assert.match(pet.needs.food.path,/^M/); assert.match(pet.needs.joy.path,/^M/);
+  assert.equal(pet.sprite.path,clean(get('P1_SPRITES.bill'))[pet.sprite.frame]);
+  assert.equal(pet.notice.text,pet.warning); assert.equal(pet.notice.visibility,'visible');
+  for(const alias of ['food','joy','food_path','joy_path','frame','sprite_path','sprite_transform','sleep_path','poop_path','discipline_path','state_class','notice_visibility']) {
+    assert.equal(Object.hasOwn(pet,alias),false,alias);
+  }
+  assert.equal(JSON.stringify(s),before);
+});
 test('all eight TRMY expressions fit the merge-variable budget with only the current path in the payload',()=>{
   const frames=clean(get('P1_SPRITES.trmy')),seen=new Set();
+  const leaves=value=>value && typeof value==='object' ? Object.values(value).flatMap(leaves) : [value];
   for(const mood of [...Object.keys(moods),'dead']) for(const step of [0,15]) {
     const s=fixture('trmy',mood); s.cursor+=step; s.timezone_fallback=true;
     if(mood==='dead') ctx.die(s,'Test end of life');
     const pet=ctx.displayPet(s,s.cursor+200*1440);
-    seen.add(pet.frame);
-    assert.equal(Object.values(pet).filter(value=>frames.includes(value)).length,1,mood);
-    assert.equal(pet.sprite_path,frames[pet.frame],mood);
-    assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`${mood}, frame ${pet.frame}`);
+    seen.add(pet.sprite.frame);
+    assert.equal(leaves(pet).filter(value=>frames.includes(value)).length,1,mood);
+    assert.equal(pet.sprite.path,frames[pet.sprite.frame],mood);
+    assert.ok(Buffer.byteLength(JSON.stringify({pet}))<5120,`${mood}, frame ${pet.sprite.frame}`);
   }
   assert.equal(seen.size,8);
 });
@@ -536,21 +559,35 @@ test('all device/layout/character states render the actual templates without mis
     }
   }
 });
+test('the fixed trmnlp preview fixture renders every layout with grouped display values',()=>{
+  const {renderLiquid}=require('../scripts/render-liquid.cjs');
+  const config=fs.readFileSync(path.join(root,'TRMNL/.trmnlp.yml'),'utf8');
+  const variables=JSON.parse(config.match(/^variables: (.+)$/m)[1]);
+  const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
+  for(const layout of layouts) {
+    const markup=fs.readFileSync(path.join(root,'TRMNL/src',layout+'.liquid'),'utf8');
+    const html=renderLiquid(shared+'\n'+markup,variables);
+    assert.ok(html.includes(`<path d="${variables.pet.sprite.path}"`));
+    assert.ok(html.includes(`aria-label="Food: ${variables.pet.needs.food.hearts}"`));
+    assert.ok(html.includes(`aria-label="Joy: ${variables.pet.needs.joy.hearts}"`));
+    assert.match(html,/Gen 1/); assert.doesNotMatch(html,/undefined|\{\{/);
+  }
+});
 test('care indicators fit beside every pet pose and appear in every layout',()=>{
   const sprites=clean(get('P1_SPRITES'));
   for(const seed of [42,90]) for(let character=1;character<stats.length;character++) for(let minute=0;minute<210;minute+=15) {
     const s=hatched(character,seed); s.cursor+=minute; s.poop=1; s.timers.scold=1;
     const pet=ctx.displayPet(s,s.cursor);
-    const x=Number(pet.sprite_transform.match(/translate\((\d+)/)[1]);
-    const scale=pet.sprite_transform.includes('scale(0.5)') ? 0.5 : 1;
-    const points=[...pet.sprite_path.matchAll(/M(\d+) (\d+)h1v1h-1z/g)];
+    const x=Number(pet.sprite.transform.match(/translate\((\d+)/)[1]);
+    const scale=pet.sprite.transform.includes('scale(0.5)') ? 0.5 : 1;
+    const points=[...pet.sprite.path.matchAll(/M(\d+) (\d+)h1v1h-1z/g)];
     assert.ok(points.every(p=>x+(Number(p[1])+1)*scale<=24)); // Poop begins at x=24, call at x=27.
-    assert.equal(pet.poop_path,sprites.poop);
+    assert.equal(pet.sprite.poop_path,sprites.poop);
   }
   for(const device of Object.keys(devices)) for(const layout of layouts) {
     const {html,pet}=render({device,layout,mood:'poop-discipline'});
-    assert.ok(html.includes(`<path d="${pet.poop_path}"`));
-    assert.ok(html.includes(`<path d="${pet.discipline_path}"`));
+    assert.ok(html.includes(`<path d="${pet.sprite.poop_path}"`));
+    assert.ok(html.includes(`<path d="${pet.sprite.discipline_path}"`));
     assert.match(html,/aria-label="[^\"]*Calling for discipline[^\"]*Needs cleaning/);
   }
 });
@@ -612,7 +649,7 @@ test('renderer escapes data and sleep/death indicators remain distinct',()=>{
   const sick=render({character:'mametchi',mood:'sick'}); assert.match(sick.html,/Under the weather/);
   const unavailable=render({mood:'timezone-unavailable'}); assert.match(unavailable.html,/Time zone unavailable · sleep uses UTC/);
   const sleeping=render({character:'mametchi',mood:'sleeping'}); assert.match(sleeping.html,/Sound asleep/);
-  assert.ok(sleeping.pet.sleep_path.length>0);
+  assert.ok(sleeping.pet.sprite.sleep_path.length>0);
   const dead=render({character:'dead'}); assert.match(dead.html,/Until next time/); assert.match(dead.html,/New egg in 60m/);
   const s=fixture(); s.activity='<script>alert(1)</script>'; s.activity_until=s.cursor+15;
   assert.ok(render({},s).html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
@@ -643,25 +680,33 @@ test('recipe has an input field to prevent TRMNL from reusing the recipe master 
   assert.doesNotMatch(field,/^  optional: true$/m);
 });
 
-test('the flat import ZIP includes and executes its standalone Serverless script', () => {
+test('the flat import ZIP executes its standalone Serverless script and renders matching templates', () => {
   const os=require('node:os');
   const {execFileSync}=require('node:child_process');
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'trmnl-tamagotchi-'));
   try {
     const zipPath=path.join(temp,'plugin.zip');
     execFileSync('python3',[path.join(root,'scripts/package-import.py'),zipPath]);
-    const inspect='import json,sys,zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n assert z.testzip() is None\n print(json.dumps({"names": z.namelist(), "source": z.read("transform.js").decode(), "settings": z.read("settings.yml").decode()}))';
+    const inspect='import json,sys,zipfile\nwith zipfile.ZipFile(sys.argv[1]) as z:\n assert z.testzip() is None\n print(json.dumps({name: z.read(name).decode() for name in z.namelist()}))';
     const archive=JSON.parse(execFileSync('python3',['-c',inspect,zipPath],{encoding:'utf8'}));
-    assert.deepEqual(archive.names.sort(),['full.liquid','half_horizontal.liquid','half_vertical.liquid','quadrant.liquid','settings.yml','shared.liquid','transform.js'].sort());
-    assert.equal(archive.source,source);
-    assert.equal(archive.settings,fs.readFileSync(path.join(root,'TRMNL/src/settings.yml'),'utf8').replace('icon: media/icon.svg\n',''));
-    assert.doesNotMatch(archive.settings,/^icon:|keyname: timezone/m);
+    assert.deepEqual(Object.keys(archive).sort(),['full.liquid','half_horizontal.liquid','half_vertical.liquid','quadrant.liquid','settings.yml','shared.liquid','transform.js'].sort());
+    assert.equal(archive['transform.js'],source);
+    assert.equal(archive['settings.yml'],fs.readFileSync(path.join(root,'TRMNL/src/settings.yml'),'utf8').replace('icon: media/icon.svg\n',''));
+    assert.doesNotMatch(archive['settings.yml'],/^icon:|keyname: timezone/m);
     const hosted=vm.createContext({Intl,Date});
-    vm.runInContext(archive.source,hosted);
+    vm.runInContext(archive['transform.js'],hosted);
     const initial=hosted.run({trmnl:{state:{},system:{timestamp_utc:start*60},user:{time_zone_iana:'Europe/Madrid'}}});
     assert.equal(initial.pet.character,'egg');
     const resumed=hosted.run({trmnl:{state:clean(initial.trmnl_state),system:{timestamp_utc:(start+15)*60},user:{time_zone_iana:'Europe/Madrid'}}});
     assert.equal(resumed.pet.character,'babytchi');
     assert.equal(resumed.trmnl_state.born,initial.trmnl_state.born);
+    const s=fixture('trmy','poop-discipline');
+    const adult=hosted.run({trmnl:{state:clean(s),system:{timestamp_utc:s.cursor*60},user:{time_zone_iana:s.timezone}}});
+    const {renderLiquid}=require('../scripts/render-liquid.cjs');
+    for(const result of [initial,resumed,adult]) for(const layout of layouts) {
+      const html=renderLiquid(archive['shared.liquid']+'\n'+archive[layout+'.liquid'],{pet:clean(result.pet)});
+      assert.ok(html.includes(`<path d="${result.pet.sprite.path}"`));
+      assert.ok(render({layout},clean(result.trmnl_state)).html.includes(html));
+    }
   } finally {fs.rmSync(temp,{recursive:true,force:true});}
 });

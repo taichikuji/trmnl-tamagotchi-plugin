@@ -405,18 +405,23 @@ function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailab
     stage: dead ? 'REBIRTH' : !s.character ? 'EGG' : s.character === 1 ? 'BABY' : s.character === 2 ? 'CHILD' : s.character < 5 ? 'TEEN' : 'ADULT',
     generation: String(s.generation),
     age: age < 60 ? `${age}m` : age < 1440 ? `${Math.floor(age/60)}h ${age%60}m` : `${Math.floor(age/1440)}d ${Math.floor(age%1440/60)}h`,
-    food: hearts(s.hunger), joy: hearts(s.happiness), status,
-    food_path: heartPath(s.hunger), joy_path: heartPath(s.happiness),
+    caretaker: P1_PROFILES[s.profile], status,
+    needs: {
+      food: { hearts: hearts(s.hunger), path: heartPath(s.hunger) },
+      joy: { hearts: hearts(s.happiness), path: heartPath(s.happiness) }
+    },
     // The title-bar logo is already embedded in shared.liquid; don't send it twice.
-    notice, notice_visibility: notice ? 'visible' : 'hidden',
-    caretaker: P1_PROFILES[s.profile], frame, sprite_path: P1_SPRITES[trmy ? 'trmy' : id][frame],
-    // Leave a pixel of space beside the original 8×8 poop, without resizing the pet.
-    sprite_transform: `translate(${8 + (poop ? Math.min(offset, -1) : offset)} 4)${trmy ? ' scale(0.5)' : ''}`,
-    sleep_path: s.sleeping && !dead && !trmy && s.character > 0 ? P1_SPRITES.sleep : '',
-    // One pile represents pending cleanup; the count and care timers stay in saved state.
-    poop_path: poop ? P1_SPRITES.poop : '',
-    discipline_path: discipline ? 'M0 0h1v3H0zM0 4h1v1H0z' : '',
-    state_class: s.sleeping ? 'is-sleeping' : dead ? 'is-dead' : '',
+    sprite: {
+      frame, path: P1_SPRITES[trmy ? 'trmy' : id][frame],
+      // Leave a pixel of space beside the original 8×8 poop, without resizing the pet.
+      transform: `translate(${8 + (poop ? Math.min(offset, -1) : offset)} 4)${trmy ? ' scale(0.5)' : ''}`,
+      sleep_path: s.sleeping && !dead && !trmy && s.character > 0 ? P1_SPRITES.sleep : '',
+      // One pile represents pending cleanup; the count and care timers stay in saved state.
+      poop_path: poop ? P1_SPRITES.poop : '',
+      discipline_path: discipline ? 'M0 0h1v3H0zM0 4h1v1H0z' : '',
+      state_class: s.sleeping ? 'is-sleeping' : dead ? 'is-dead' : ''
+    },
+    notice: { text: notice, visibility: notice ? 'visible' : 'hidden' },
     warning: reminder,
     updated_at: new Date(s.cursor * 60000).toISOString(),
     next_event: dead ? `New egg in ${Math.max(0, 60 - (s.cursor - s.dead_at))}m` :

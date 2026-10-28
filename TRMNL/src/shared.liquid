@@ -15,18 +15,18 @@
 {% template pet_content %}
   <div class="flex flex--center grow w--full">
     <svg class="w--full {{ sprite_size | escape }}" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-      <g transform="{{ pet.sprite_transform | escape }}"><path d="{{ pet.sprite_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(24 1)"><path d="{{ pet.sleep_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(24 12)"><path d="{{ pet.poop_path | escape }}" fill="currentColor"/></g>
-      <g transform="translate(27 2)"><path d="{{ pet.discipline_path | escape }}" fill="currentColor"/></g>
+      <g transform="{{ pet.sprite.transform | escape }}"><path d="{{ pet.sprite.path | escape }}" fill="currentColor"/></g>
+      <g transform="translate(24 1)"><path d="{{ pet.sprite.sleep_path | escape }}" fill="currentColor"/></g>
+      <g transform="translate(24 12)"><path d="{{ pet.sprite.poop_path | escape }}" fill="currentColor"/></g>
+      <g transform="translate(27 2)"><path d="{{ pet.sprite.discipline_path | escape }}" fill="currentColor"/></g>
     </svg>
   </div>
   <div class="grid grid--cols-3 portrait:grid--cols-2 w--full gap--small">
-    <div class="flex flex--row flex--left gap--small"><svg class="{{ icon_size | escape }}" viewBox="0 0 75 75" fill="currentColor" aria-hidden="true">{{ svg_food }}</svg><svg class="{{ hearts_size | escape }}" viewBox="0 0 36 8" role="img" aria-label="Food: {{ pet.food | escape }}" shape-rendering="crispEdges"><path d="{{ pet.food_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
-    <div class="flex flex--row flex--center portrait:flex--right gap--small"><svg class="{{ icon_size | escape }}" viewBox="0 0 75 75" fill="currentColor" fill-rule="evenodd" aria-hidden="true">{{ svg_joy }}</svg><svg class="{{ hearts_size | escape }}" viewBox="0 0 36 8" role="img" aria-label="Joy: {{ pet.joy | escape }}" shape-rendering="crispEdges"><path d="{{ pet.joy_path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
+    <div class="flex flex--row flex--left gap--small"><svg class="{{ icon_size | escape }}" viewBox="0 0 75 75" fill="currentColor" aria-hidden="true">{{ svg_food }}</svg><svg class="{{ hearts_size | escape }}" viewBox="0 0 36 8" role="img" aria-label="Food: {{ pet.needs.food.hearts | escape }}" shape-rendering="crispEdges"><path d="{{ pet.needs.food.path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
+    <div class="flex flex--row flex--center portrait:flex--right gap--small"><svg class="{{ icon_size | escape }}" viewBox="0 0 75 75" fill="currentColor" fill-rule="evenodd" aria-hidden="true">{{ svg_joy }}</svg><svg class="{{ hearts_size | escape }}" viewBox="0 0 36 8" role="img" aria-label="Joy: {{ pet.needs.joy.hearts | escape }}" shape-rendering="crispEdges"><path d="{{ pet.needs.joy.path | escape }}" fill="currentColor" fill-rule="evenodd"/></svg></div>
     <div class="flex flex--row flex--right portrait:col--span-2 portrait:flex--center"><span class="label lg:label--xlarge">{{ pet.age | escape }}</span></div>
   </div>
-  <span class="label {{ label_size | escape }} {{ pet.notice_visibility | escape }}">{{ pet.notice | escape }}</span>
+  <span class="label {{ label_size | escape }} {{ pet.notice.visibility | escape }}">{{ pet.notice.text | escape }}</span>
 {% endtemplate %}
 
 {% template title_bar %}
