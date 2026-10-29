@@ -628,7 +628,7 @@ test('shared rendering isolates parameters, escapes values and preserves layout-
   }
 });
 
-test('title bars share the theme-colored egg and the listing icon uses TRMNL orange',()=>{
+test('title bars embed the captured egg and the listing icon uses TRMNL orange',()=>{
   const shared=fs.readFileSync(path.join(root,'TRMNL/src/shared.liquid'),'utf8');
   const icon=fs.readFileSync(path.join(root,'TRMNL/media/icon.svg'),'utf8');
   assert.match(shared,/{%- capture svg_logo -%}/);
@@ -639,8 +639,12 @@ test('title bars share the theme-colored egg and the listing icon uses TRMNL ora
   for(const layout of layouts) {
     const html=render({layout}).html;
     const titleBar=html.slice(html.indexOf('<div class="title_bar">'));
-    const svg=titleBar.match(/<svg\b[^>]*>[\s\S]*?<\/svg>/)[0];
-    assert.match(svg,/fill="currentColor"/);
+    const image=titleBar.match(/<img\b[^>]*>/)[0];
+    assert.match(image,/class="image image--adaptive w--7 h--7"/);
+    const encoded=image.match(/src="data:image\/svg\+xml;base64,([^"]+)"/)[1];
+    const svg=Buffer.from(encoded,'base64').toString('utf8');
+    assert.match(svg,/<svg\b[^>]*xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+    assert.match(svg,/fill="#000"/);
     assert.equal(svg.match(/<path d="([^"]+)"/)[1],egg);
   }
 });

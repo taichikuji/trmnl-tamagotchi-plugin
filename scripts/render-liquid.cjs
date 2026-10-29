@@ -39,9 +39,10 @@ function renderLiquid(source, variables) {
         return fragment(templates.get(token.template), parameters, depth + 1);
       }
       if (token.output !== undefined) {
-        const expression = token.output.trim().match(/^([\w.]+)(?:\s*\|\s*(escape))?$/);
+        const expression = token.output.trim().match(/^([\w.]+)(?:\s*\|\s*(escape|base64_encode))?$/);
         if (!expression) throw Error(`Unsupported Liquid output: ${token.output}`);
         const result = value(expression[1], scope);
+        if (expression[2] === 'base64_encode') return Buffer.from(String(result ?? '')).toString('base64');
         return expression[2] ? escape(result) : String(result ?? '');
       }
       return ''; // Liquid comment.
