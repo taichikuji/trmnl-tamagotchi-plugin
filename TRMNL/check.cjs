@@ -674,13 +674,13 @@ test('plugin settings keep the native static strategy and a valid short descript
   assert.match(settings,/^  github_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin$/m);
   assert.match(settings,/^  learn_more_url: https:\/\/github.com\/taichikuji\/trmnl-tamagotchi-plugin\/tree\/main\/TRMNL#setup$/m);
 });
-test('recipe has an input field to prevent TRMNL from reusing the recipe master screens', () => {
+test('recipe keeps a hidden input for independent saves without a visible pet choice', () => {
   const settings=fs.readFileSync(path.join(root,'TRMNL/src/settings.yml'),'utf8');
   const field=settings.split(/(?=^- keyname: )/m).find(field=>field.startsWith('- keyname: pet_instance\n'));
   assert.ok(field,'author_bio alone does not enable per-install rendering and saved state');
-  assert.match(field,/^  field_type: select$/m);
+  assert.match(field,/^  field_type: hidden$/m);
   assert.match(field,/^  default: my_own_pet$/m);
-  assert.match(field,/^  options:\n  - My own pet$/m);
+  assert.doesNotMatch(field,/^  options:/m);
   assert.doesNotMatch(field,/^  optional: true$/m);
 });
 
