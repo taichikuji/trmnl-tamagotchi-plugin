@@ -50,6 +50,70 @@ test('every growth branch and boundary, including teen subtypes and Bill', () =>
   ctx.evolve(s); assert.equal(s.character,6); // cumulative mistakes, not reset at adolescence
   const mask = hatched(7); ctx.evolve(mask); assert.equal(mask.character,11); assert.equal(mask.chart,15);
 });
+test('both caretaker transitions offer 25% changes and equal alternatives for every profile', () => {
+  const count=4096, joint=[0,0,0,0];
+  for(let profile=0;profile<3;profile++) {
+    const totals=[[0,0,0],[0,0,0]];
+    for(let seed=0;seed<count;seed++) {
+      const changed=[];
+      for(let stage=0;stage<2;stage++) {
+        const s=hatched(stage ? 3 : 2,seed); s.profile=profile;
+        ctx.evolve(s); totals[stage][s.profile]++;
+        changed.push(s.profile!==profile);
+      }
+      if(profile===0) joint[Number(changed[0])*2+Number(changed[1])]++;
+    }
+    for(const totalsAtStage of totals) for(let next=0;next<3;next++) {
+      const expected=next===profile ? .75 : .125;
+      assert.ok(Math.abs(totalsAtStage[next]/count-expected)<.03,
+        `profile ${profile} to ${next}: ${totalsAtStage[next]}/${count}`);
+    }
+  }
+  // Reusing the same stage decision would pass the marginal rates but fail these joint rates.
+  for(const [i,expected] of [.5625,.1875,.1875,.0625].entries()) {
+    assert.ok(Math.abs(joint[i]/count-expected)<.03,`transition pair ${i}: ${joint[i]}/${count}`);
+  }
+});
+test('every growth branch preserves history, accepted care and care RNG across caretaker changes', () => {
+  const reference=require('./fixtures/p1-reference.json');
+  const names=clean(get('P1_NAMES')), profiles=clean(get('P1_PROFILES')), seen=new Set();
+  for(let seed=0;seed<32;seed++) for(const [chart,rows] of reference.charts.entries()) {
+    for(const [care,missed,nextChart,character] of rows) {
+      const s=hatched([1,2,3,3,4,4,7][chart],seed);
+      Object.assign(s,{chart,care,missed_discipline:missed,timezone_fallback:false});
+      s.timers.growth=1;
+      ctx.remember(s,'Earlier care');
+      s.due=Object.fromEntries(clean(get('P1_TASKS')).map((task,i)=>[task,s.cursor+10+i]));
+      const before=clean(s), decision=clean(s);
+      const loaded=ctx.run({trmnl:{state:clean(s),system:{timestamp_utc:s.cursor*60}}});
+      assert.deepEqual(clean(loaded.trmnl_state),before); // Loading an old save never replays a transition.
+      // Branch and care history must not affect the stage's independent decision.
+      decision.character=chart===1 ? 2 : 3; decision.chart=chart===1 ? 1 : 2;
+      decision.care=0; decision.missed_discipline=0; decision.rng=(s.rng+12345)>>>0;
+      ctx.evolve(decision);
+      const next=clean(ctx.advance(s,s.cursor+1));
+      assert.equal(next.chart,nextChart);
+      assert.ok(chart===2 && care===0 && missed===0 ? [5,12].includes(next.character) : next.character===character);
+      seen.add(next.character);
+      assert.equal(next.profile,chart===0 || chart===6 ? s.profile : decision.profile);
+      assert.equal(next.rng,s.rng); assert.deepEqual(next.due,s.due);
+      assert.equal(next.care,care); assert.equal(next.missed_discipline,missed);
+      assert.deepEqual(next.recent.slice(0,before.recent.length),before.recent);
+      assert.ok(next.recent.some(event=>event.text===`Grew into ${names[next.character]}`));
+      const changed=next.profile!==s.profile;
+      assert.equal(next.recent.at(-1).text,changed ? `Caretaker became ${profiles[next.profile]}` : `Grew into ${names[next.character]}`);
+      const resumed=ctx.run({trmnl:{state:clean(next),system:{timestamp_utc:next.cursor*60}}});
+      assert.deepEqual(clean(resumed.trmnl_state),next);
+      assert.equal(resumed.pet.caretaker,profiles[next.profile]);
+      assert.equal(resumed.pet.next_event,`${resumed.pet.caretaker} caretaker`);
+      const served=clean(next); served.cursor=s.due.feed; served.hunger=0;
+      ctx.serviceCare(served); assert.equal(served.hunger,15); // Accepted care survives even a neglectful new style.
+      assert.equal(served.due.feed,undefined);
+      assert.deepEqual(clean(s),before);
+    }
+  }
+  assert.deepEqual([...seen].sort((a,b)=>a-b),Array.from({length:11},(_,i)=>i+2));
+});
 test('egg hatches at five minutes and baby growth pauses during five-minute nap', () => {
   const s = fresh();
   assert.equal(ctx.advance(s,start+4).character,0);
@@ -134,20 +198,22 @@ test('original death thresholds, adult grace period and old-age need acceleratio
   ctx.minuteTick(wake,540); assert.equal(wake.hunger_rate,61); assert.equal(wake.happy_rate,69);
 });
 test('automatic rebirth occurs exactly one hour later and changes seed/caretaker stream', () => {
-  const s=hatched(5); ctx.die(s,'End of life');
+  const s=hatched(5); s.care=3; s.missed_discipline=2; ctx.die(s,'End of life');
   const before=ctx.advance(s,s.cursor+59); assert.equal(before.generation,1); assert.equal(before.dead_at,s.cursor);
   const after=ctx.advance(s,s.cursor+60); assert.equal(after.generation,2); assert.equal(after.character,0);
   assert.equal(after.dead_at,null); assert.notEqual(after.seed,s.seed); assert.equal(after.born,s.cursor+60);
+  assert.deepEqual(clean(after.due),{}); assert.equal(after.care,0); assert.equal(after.missed_discipline,0);
+  assert.deepEqual(clean(after.recent),[{at:after.born,text:'A new egg'}]);
   assert.equal(ctx.advance(after,after.cursor+5).character,1);
 });
 test('lifecycle is identical for minute, 15-minute, irregular and multi-day refreshes', () => {
-  for(const seed of [0,42,90,99]) {
+  for(const seed of [0,13,42,90,99]) {
     const initial=fresh(seed); const until=start+14*1440;
     const expected=clean(ctx.advance(initial,until));
-    for(const step of [1,15,73,1440]) {
-      let s=initial;
-      for(let cursor=start+step;cursor<until;cursor+=step) s=ctx.advance(s,cursor);
-      assert.deepEqual(clean(ctx.advance(s,until)),expected,`seed ${seed}, step ${step}`);
+    for(const steps of [[1],[15],[7,83,2,1440,19],[1440]]) {
+      let s=initial, i=0;
+      while(s.cursor<until) s=ctx.advance(s,Math.min(until,s.cursor+steps[i++%steps.length]));
+      assert.deepEqual(clean(s),expected,`seed ${seed}, steps ${steps}`);
     }
     assert.deepEqual(clean(ctx.advance(initial,start)),initial);
     assert.deepEqual(clean(ctx.advance(expected,until-1)),expected);
