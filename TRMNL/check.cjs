@@ -50,6 +50,26 @@ test('every growth branch and boundary, including teen subtypes and Bill', () =>
   ctx.evolve(s); assert.equal(s.character,6); // cumulative mistakes, not reset at adolescence
   const mask = hatched(7); ctx.evolve(mask); assert.equal(mask.character,11); assert.equal(mask.chart,15);
 });
+test('caretaker changes preserve care and pending requests across life stages', () => {
+  const s = hatched(2, 13);
+  s.care = 0; s.missed_discipline = 0; s.due = { feed: s.cursor + 10 };
+  const rng = s.rng, due = clean(s.due);
+  assert.equal(s.profile, 1);
+  ctx.evolve(s); // Child to teen: this seed changes caretaker.
+  assert.equal(s.character, 3); assert.equal(s.profile, 0);
+  assert.equal(s.rng, rng); assert.deepEqual(clean(s.due), due);
+  ctx.evolve(s); // Teen to adult: the same life can change again.
+  assert.ok(s.character >= 5); assert.equal(s.profile, 2);
+  assert.equal(s.rng, rng); assert.deepEqual(clean(s.due), due);
+  assert.equal(s.care, 0); assert.equal(s.missed_discipline, 0);
+  ctx.validateState(s);
+
+  const steady = hatched(2, 9), profile = steady.profile;
+  ctx.evolve(steady); ctx.evolve(steady);
+  assert.equal(steady.profile, profile); // A life can keep its original caretaker.
+  const bill = hatched(7, 13), billProfile = bill.profile;
+  ctx.evolve(bill); assert.equal(bill.character, 11); assert.equal(bill.profile, billProfile);
+});
 test('egg hatches at five minutes and baby growth pauses during five-minute nap', () => {
   const s = fresh();
   assert.equal(ctx.advance(s,start+4).character,0);
@@ -714,3 +734,4 @@ test('the flat import ZIP executes its standalone Serverless script and renders 
     }
   } finally {fs.rmSync(temp,{recursive:true,force:true});}
 });
+

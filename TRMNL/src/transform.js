@@ -134,6 +134,7 @@ function chooseEvolution(chart, care, discipline, seed = 0) {
   return { chart: row[2], character };
 }
 function evolve(s) {
+  const previousCharacter = s.character;
   const next = chooseEvolution(s.chart, s.care, s.missed_discipline, s.seed);
   s.character = next.character; s.chart = next.chart;
   const data = P1_STATS[s.character];
@@ -145,6 +146,17 @@ function evolve(s) {
   s.discipline = [2, 4].includes(s.chart) ? 8 : data[7];
   // Heart and poop countdowns, mistakes and outstanding calls survive evolution.
   remember(s, `Grew into ${P1_NAMES[s.character]}`);
+  // Caretakers can change at adolescence and adulthood, but not at Bill's later evolution.
+  const transition = previousCharacter === 2 && [3, 4].includes(s.character) ? 'teen' :
+    [3, 4].includes(previousCharacter) && s.character >= 5 ? 'adult' : null;
+  if (transition) {
+    // Keep this 25% decision independent of the saved care RNG and existing requests.
+    const decision = { rng: hashSeed(`caretaker:${s.seed}:${transition}`) };
+    if (random(decision) < .25) {
+      s.profile = (s.profile + 1 + Math.floor(random(decision) * 2)) % 3;
+      remember(s, `Caretaker became ${P1_PROFILES[s.profile]}`);
+    }
+  }
 }
 function die(s, cause) {
   s.dead_at = s.cursor; s.due = {}; s.sleeping = false;
@@ -454,3 +466,4 @@ function run(input = {}) {
   if (JSON.stringify(s).length > 8192) throw new Error('Saved state exceeds TRMNL limit');
   return result;
 }
+
