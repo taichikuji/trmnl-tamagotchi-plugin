@@ -19,7 +19,7 @@ custom_fields:
 - keyname: plugin_info
   name: About This Plugin
   field_type: author_bio
-  category: life
+  category: games,life
   description: "TRMNLGotchi is a low-maintenance virtual pet for your TRMNL, created by Ivan Perez!<br/>Unofficial fan project, unaffiliated with BANDAI or Bandai Namco; Tamagotchi is a BANDAI trademark."
   github_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin
   learn_more_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup
