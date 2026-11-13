@@ -71,7 +71,7 @@ Each new egg chooses P1 or P2 with equal probability and gets a seeded caretaker
 
 Progress follows elapsed time, so changing the refresh frequency does not change care decisions. Force Refresh preserves the pet; **Clear Saved State** starts a new life. See the [rule table](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Lifecycle-rules) for the researched rules and adaptations, and [verification progress](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Verification) for the hosted checks completed so far.
 
-In P1, TRMY is an alternative perfect-care adult alongside Mametchi. P2 keeps Mimitchi on that branch. When the Mametchi-eligible Tamatchi teen reaches adulthood with **zero care mistakes and zero missed discipline calls**, its life seed chooses evenly between Mametchi and TRMY. Mametchi-eligible teens with one or two care mistakes still become Mametchi. All other evolution branches, including the secret adult, keep their original outcomes. The choice happens during normal evolution and is saved as the character itself; existing adults keep their current identities after updating.
+TRMY is an alternative perfect-care adult in both families. When an eligible Tamatchi (P1) or Tongaritchi (P2) teen reaches adulthood with **zero care mistakes and zero missed discipline calls**, its life seed chooses evenly between TRMY and the family's original perfect-care adult: Mametchi in P1 or Mimitchi in P2. Eligible teens with one or two care mistakes still become Mametchi or Mimitchi. All other evolution branches, including the secret adult, keep their original outcomes. The choice happens during normal evolution and is saved as the character itself; existing adults keep their current identities after updating.
 
 TRMY has its own entry in the same character, stats, sprites and growth tables. Its hunger drops every **180 awake minutes** and happiness every **210 awake minutes**, compared with Mametchi's 81 and 91. It sleeps **22:00–09:00** in the account time zone, starts fully disciplined, and takes one medicine dose per treatment. Illness and adult aging countdowns are both 4,095 awake minutes, within the original P1 timer ranges. It uses the same cleanup, illness, aging, death and rebirth mechanics as the other pets. Aging eventually accelerates its needs too.
 
@@ -89,9 +89,9 @@ TRMY's eight expressions are complete 32×32 SVG pixel paths in `TRMY_SPRITES`. 
 
 Sleep takes priority over illness, then cleanup, then discipline/empty needs, then activity reactions. Brief meal, play and successful-care reactions remain visible for up to **15 simulated minutes** so a normal refresh can catch them. This display-only extension uses the existing activity timestamp; care timings, random decisions and saved-state fields are unchanged.
 
-Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Sleep Z, poop, discipline and the death angel reuse the original artwork. The extraction script assembles upper and lower ROM tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
+Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Poop and discipline indicators reuse the original artwork. TRMY uses the same expressions and stats in both families. The extraction script assembles upper and lower ROM tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
 
-Run `node scripts/preview.cjs` from the repository root and select **trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
+Run `node scripts/preview.cjs` from the repository root and select **trmy** or **p2-trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
 
 ## P1/P2 artwork and animation
 
@@ -105,7 +105,7 @@ The supplied P1 and Japanese first-series P2 ROMs each provide **142 distinct co
 | Kuchipatchi / Nyorotchi / Tarakotchi | Hashizoutchi / Kusatchi / Takotchi |
 | Bill | Sekitoritchi |
 
-The supplied ROMs have matching lifecycle/stat tables for these slots, so P2 reuses the researched care engine. Other P2 editions may have different characters and are not substituted for this ROM.
+The supplied ROMs have matching lifecycle/stat tables for these slots, so both families share one care engine and growth chart. Identical animation sequences are stored once; every character retains its complete poses and original timing. SVG paths combine adjacent pixels without changing the artwork. Other P2 editions may have different characters and are not substituted for this ROM.
 
 Run `node scripts/check-rom.cjs` to check animation timing, evolution, family selection, saved-state compatibility and all local preview combinations. These checks do not require ROM files.
 

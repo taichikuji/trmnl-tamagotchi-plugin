@@ -8,8 +8,8 @@ const root = path.join(__dirname, '..');
 const src = path.join(root, 'TRMNL/src');
 const context = vm.createContext({ Date, Intl });
 vm.runInContext(fs.readFileSync(path.join(src, 'transform.js'), 'utf8'), context);
-const characters = vm.runInContext('P1_NAMES', context);
-const p2Characters = vm.runInContext('P2_NAMES', context);
+const names = vm.runInContext('NAMES', context);
+const characters = [...names.p1, ...names.p2.slice(1, -1), 'p2-egg', 'p2-trmy', 'dead', 'p2-dead'];
 const devices = { og: [800,480], x: [1872,1404], portrait: [1404,1872] };
 const frameworkVersion = '3.4.3';
 const assetRoot = path.join(root, '.cache/framework', frameworkVersion);
@@ -28,10 +28,10 @@ const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;
 function fixture(character = 'trmy', mood = 'awake', seed = 42) {
   const s = context.newLife(seed, base, 'Europe/Madrid');
   // Fixtures select a family explicitly; actual lives keep their saved family.
-  s.family = character?.startsWith('p2-') || p2Characters.slice(1).includes(character) ? 'p2' : 'p1';
+  s.family = character?.startsWith('p2-') || names.p2.slice(1, -1).includes(character) ? 'p2' : 'p1';
   character = character?.replace(/^p2-/, '');
   s.cursor += 7 * 1440;
-  const index = (s.family === 'p2' ? p2Characters : characters).indexOf(character);
+  const index = names[s.family].indexOf(character);
   s.character = index >= 0 ? index : 5;
   s.hunger = 15; s.happiness = 11; s.activity_until = 0;
   if (character === 'dead') context.die(s, 'Reached the end of this life');
@@ -85,7 +85,7 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <div class="toolbar"><div class="heading"><h1>TRMNLGotchi</h1><p>Your nostalgic friend on TRMNL!</p></div>
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
-<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,...p2Characters.slice(1),'p2-egg','dead','p2-dead'].map(x=>`<option ${x==='trmy'?'selected':''}>${x}</option>`).join('')}</select></label>
+<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${characters.map(x=>`<option ${x==='trmy'?'selected':''}>${x}</option>`).join('')}</select></label>
 <label>Display state<select id="mood">${Object.entries(moods).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label><label>ROM pose / tick<input id="frame" type="number" min="0" max="511" value="0"></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
 <main class="preview-wrap"><div class="preview-frame" id="holder"><iframe id="screen" title="TRMNL display"></iframe></div></main>
@@ -128,4 +128,4 @@ if(require.main===module) {
   require('node:child_process').execFileSync('python3',[path.join(__dirname,'preview-assets.py'),assetRoot,frameworkVersion],{stdio:'inherit'});
   server().listen(8766,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8766'));
 }
-module.exports={render,fixture,server,devices,layouts,moods};
+module.exports={render,fixture,server,devices,layouts,moods,characters};

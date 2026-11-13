@@ -3,10 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const { fixture, render, devices, layouts, moods } = require('./preview.cjs');
+const { fixture, render, devices, layouts, moods, characters } = require('./preview.cjs');
 const context = vm.createContext({ Date, Intl });
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../TRMNL/src/transform.js'), 'utf8'), context);
 const art = vm.runInContext('ROM_SPRITES', context);
+const animations = vm.runInContext('ROM_ANIMATIONS', context);
 const clean = value => JSON.parse(JSON.stringify(value));
 
 test('every ROM sequence preserves its prefix, holds and loop across repeated cycles', () => {
@@ -14,7 +15,8 @@ test('every ROM sequence preserves its prefix, holds and loop across repeated cy
     assert.equal(art[family].characters.length, 12);
     for (const [character, data] of art[family].characters.entries()) {
       assert.equal(data.animations.length, 11);
-      for (const [action, sequence] of data.animations.entries()) {
+      for (const [action, id] of data.animations.entries()) {
+        const sequence = animations[id];
         const [prefix, loop] = sequence.map(runs => runs.flatMap(([pose, hold]) => {
           assert.ok(Number.isInteger(hold) && hold > 0);
           assert.equal(typeof data.poses[pose], 'string');
@@ -46,7 +48,7 @@ test('ROM preview keeps death artwork and supports saves without a family', () =
   }
 });
 
-test('P2 evolution uses the original slots and never produces TRMY', () => {
+test('both families use the same evolution slots', () => {
   for (const family of ['p1', 'p2']) for (let seed = 0; seed < 32; seed++) {
     for (let chart = 0; chart < 7; chart++) for (let care = 0; care < 16; care++) {
       for (let discipline = 0; discipline < 16; discipline++) {
@@ -55,11 +57,47 @@ test('P2 evolution uses the original slots and never produces TRMY', () => {
         const expected = context.chooseEvolution(chart, care, discipline, seed);
         context.evolve(state);
         assert.equal(state.chart, expected.chart);
-        assert.equal(state.character, family === 'p2' && expected.character === 12 ? 5 : expected.character);
+        assert.equal(state.character, expected.character);
         context.validateState(state);
       }
     }
   }
+});
+
+test('both families offer TRMY evenly on the flawless-care branch and retain saved adults', () => {
+  for (const family of ['p1', 'p2']) {
+    let trmy = 0;
+    for (let seed = 0; seed < 4096; seed++) {
+      const state = fixture(family === 'p1' ? 'tamatchi' : 'tongaritchi', 'awake', seed);
+      state.chart = 2;
+      const rng = state.rng;
+      context.evolve(state);
+      assert.ok([5, 12].includes(state.character));
+      assert.equal(state.family, family);
+      assert.equal(state.rng, rng);
+      trmy += state.character === 12;
+      const pet = context.displayPet(state, state.cursor);
+      assert.equal(pet.character, state.character === 12 ? 'trmy' : family === 'p1' ? 'mametchi' : 'mimitchi');
+      assert.ok(state.recent.some(event => event.text === `Grew into ${pet.character}`));
+      const saved = clean(state);
+      const resumed = context.run({ trmnl: { state: saved, system: { timestamp_utc: saved.cursor * 60 } } });
+      assert.equal(resumed.pet.character, pet.character);
+      assert.equal(resumed.trmnl_state.family, family);
+      context.validateState(saved);
+    }
+    assert.ok(trmy > 1945 && trmy < 2151, `${family}: ${trmy}`);
+    for (const care of [1, 2]) assert.equal(context.chooseEvolution(2, care, 0).character, 5);
+  }
+  for (const character of ['mametchi', 'mimitchi', 'trmy', 'p2-trmy']) {
+    const saved = fixture(character, 'awake', 0);
+    saved.chart = 15;
+    const resumed = context.advance(clean(saved), saved.cursor + 15);
+    assert.equal(resumed.character, saved.character);
+    assert.equal(resumed.family, saved.family);
+  }
+  assert.equal(fixture('trmy').family, 'p1');
+  assert.equal(fixture('p2-trmy').family, 'p2');
+  assert.equal(fixture('p2-trmy').character, 12);
 });
 
 test('family selection is deterministic, balanced and independent of the care stream', () => {
@@ -89,7 +127,7 @@ test('legacy saves retain P1 until rebirth; invalid families are rejected', () =
   for (const family of [null, '', 'p3', {}, []]) {
     assert.throws(() => context.advance({ ...legacy, family }, legacy.cursor), /Invalid pet family/);
   }
-  assert.throws(() => context.advance({ ...legacy, family: 'p2', character: 12 }, legacy.cursor), /Invalid pet family/);
+  assert.throws(() => context.advance({ ...legacy, character: 13 }, legacy.cursor), /Invalid saved state: character/);
 });
 
 test('P1 and P2 save/resume produce the same life history as uninterrupted catch-up', () => {
@@ -109,7 +147,6 @@ test('P1 and P2 save/resume produce the same life history as uninterrupted catch
 });
 
 test('all characters and care states render in every device and layout without changing saved state', () => {
-  const characters = [...vm.runInContext('P1_NAMES', context), ...vm.runInContext('P2_NAMES.slice(1)', context), 'p2-egg', 'dead', 'p2-dead'];
   for (const character of characters) for (const mood of Object.keys(moods)) {
     const state = fixture(character, mood);
     const before = JSON.stringify(state);
