@@ -1,6 +1,6 @@
 # TRMNLGotchi
 
-Your nostalgic friend on TRMNL. A P1-style virtual pet that hatches, eats, plays, sleeps and evolves with an automatic caretaker. Care history shapes each generation; TRMY can appear as an alternative perfect-care adult.
+Your nostalgic friend on TRMNL. A P1/P2 virtual pet that hatches, eats, plays, sleeps and evolves with an automatic caretaker. Care history shapes each generation; TRMY can appear as an alternative perfect-care adult.
 
 <a href="https://trmnl.com/recipes/510825"><img width="150" alt="Works with TRMNL" src="https://trmnl.com/images/brand/badges/light/works-with-trmnl/trmnl-badge-works-with-light.svg" /></a>
 
@@ -37,3 +37,4 @@ TRMNLGotchi is an unofficial fan project made out of nostalgia. Tamagotchi is a 
 The MIT license covers this project's original implementation code and documentation. Third-party artwork and trademarks retain their own terms; see [LICENSE](LICENSE). No ROM or firmware source is included.
 
 [Questions or ideas?](https://github.com/taichikuji/trmnl-tamagotchi-plugin/issues) · [License](LICENSE)
+

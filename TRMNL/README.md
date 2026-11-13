@@ -1,6 +1,6 @@
 # TRMNLGotchi
 
-A TRMNL plugin that raises a nostalgic P1-style virtual pet. It hatches, eats, plays, sleeps and evolves with an automatic caretaker.
+A TRMNL plugin that raises a nostalgic P1 or P2 virtual pet. It hatches, eats, plays, sleeps and evolves with an automatic caretaker.
 
 ## Icon
 
@@ -67,15 +67,15 @@ Hosted tests covered new installs, saved-state persistence and upgrades using on
 
 ## Pet behavior
 
-Each generation gets a seeded caretaker. Care history determines evolution, and a new egg appears one simulated hour after death. **Gen 1** is the first generation.
+Each new egg chooses P1 or P2 with equal probability and gets a seeded caretaker. The family stays fixed throughout that life. Saves from before P2 support continue as P1 until rebirth; the displayed **Gen** remains the life counter, not the ROM family. Care history determines evolution, and a new egg appears one simulated hour after death. **Gen 1** is the first generation.
 
 Progress follows elapsed time, so changing the refresh frequency does not change care decisions. Force Refresh preserves the pet; **Clear Saved State** starts a new life. See the [rule table](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Lifecycle-rules) for the researched rules and adaptations, and [verification progress](https://github.com/taichikuji/trmnl-tamagotchi-plugin/wiki/Verification) for the hosted checks completed so far.
 
-TRMY is an alternative perfect-care adult alongside Mametchi. When the Mametchi-eligible Tamatchi teen reaches adulthood with **zero care mistakes and zero missed discipline calls**, its life seed chooses evenly between Mametchi and TRMY. Mametchi-eligible teens with one or two care mistakes still become Mametchi. All other evolution branches, including the secret adult, keep their original outcomes. The choice happens during normal evolution and is saved as the character itself; existing adults keep their current identities after updating.
+TRMY is an alternative perfect-care adult in both families. When an eligible Tamatchi (P1) or Tongaritchi (P2) teen reaches adulthood with **zero care mistakes and zero missed discipline calls**, its life seed chooses evenly between TRMY and the family's original perfect-care adult: Mametchi in P1 or Mimitchi in P2. Eligible teens with one or two care mistakes still become Mametchi or Mimitchi. All other evolution branches, including the secret adult, keep their original outcomes. The choice happens during normal evolution and is saved as the character itself; existing adults keep their current identities after updating.
 
 TRMY has its own entry in the same character, stats, sprites and growth tables. Its hunger drops every **180 awake minutes** and happiness every **210 awake minutes**, compared with Mametchi's 81 and 91. It sleeps **22:00–09:00** in the account time zone, starts fully disciplined, and takes one medicine dose per treatment. Illness and adult aging countdowns are both 4,095 awake minutes, within the original P1 timer ranges. It uses the same cleanup, illness, aging, death and rebirth mechanics as the other pets. Aging eventually accelerates its needs too.
 
-TRMY's eight expressions are complete 32×32 SVG pixel paths in the same `P1_SPRITES` table. **Unamused** and **cheerful** alternate at the original 15-minute idle cadence; care states and recent activities select the other expressions:
+TRMY's eight expressions are complete 32×32 SVG pixel paths in `TRMY_SPRITES`. **Unamused** and **cheerful** alternate at the original 15-minute idle cadence; care states and recent activities select the other expressions:
 
 | Expression | When it appears |
 | --- | --- |
@@ -89,11 +89,45 @@ TRMY's eight expressions are complete 32×32 SVG pixel paths in the same `P1_SPR
 
 Sleep takes priority over illness, then cleanup, then discipline/empty needs, then activity reactions. Brief meal, play and successful-care reactions remain visible for up to **15 simulated minutes** so a normal refresh can catch them. This display-only extension uses the existing activity timestamp; care timings, random decisions and saved-state fields are unchanged.
 
-Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Sleep Z, poop, discipline and the death angel reuse the original artwork. The original P1 extraction script assembles upper and lower tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
+Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Poop and discipline indicators reuse the original artwork. TRMY uses the same expressions and stats in both families. The extraction script assembles upper and lower ROM tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
 
-Run `node scripts/preview.cjs` from the repository root and select **trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
+Run `node scripts/preview.cjs` from the repository root and select **trmy** or **p2-trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
+
+## P1/P2 artwork and animation
+
+The supplied P1 and Japanese first-series P2 ROMs each provide **142 distinct complete body poses** and **132 character/action sequences** (12 character slots × 11 actions). Extraction includes canonical table poses, mixed upper/lower poses, mirrored tiles, original holds and loop points. Egg, hatching, sleep, illness, meals, games, reactions and the regional death sprite are included, together with both sleep and poop indicator frames. TRMY keeps its supplied custom artwork.
+
+| P1 | P2 (supplied Japanese ROM) |
+| --- | --- |
+| Babytchi / Marutchi | Shirobabytchi / Tonmarutchi |
+| Tamatchi / Kuchitamatchi | Tongaritchi / Hashitamatchi |
+| Mametchi / Ginjirotchi / Maskutchi | Mimitchi / Pochitchi / Zuccitchi |
+| Kuchipatchi / Nyorotchi / Tarakotchi | Hashizoutchi / Kusatchi / Takotchi |
+| Bill | Sekitoritchi |
+
+The supplied ROMs have matching lifecycle/stat tables for these slots, so both families share one care engine and growth chart. Identical animation sequences are stored once; every character retains its complete poses and original timing. SVG paths combine adjacent pixels without changing the artwork. Other P2 editions may have different characters and are not substituted for this ROM.
+
+Run `node scripts/check-rom.cjs` to check animation timing, evolution, family selection, saved-state compatibility and all local preview combinations. These checks do not require ROM files.
+
+TRMNL displays one sampled pose per refresh. Idle uses 15-minute slots; recent care reactions use the existing activity timestamp. This preserves the extracted sequences without requesting rapid e-ink refreshes. Every extracted pose and all eleven action sequences can be inspected in `node scripts/preview.cjs`: choose a character, **All extracted poses** or **ROM animation 0–10**, then change **ROM pose / tick**. Numeric action slots also include sequences unused by passive care; extraction does not add manual care controls.
+
+### Reproducing extraction
+
+No ROMs or generated firmware code are checked in. With the supplied ROMs and an external [tamarecomp](https://github.com/sp00nznet/tamarecomp) checkout, generate a C CPU for each ROM using its `emit.py`, then compile a tracing executable for each generated C file:
+
+```sh
+cc -O0 -DTAMA_TRACING -I/path/to/tamarecomp/include /path/to/p1.c /path/to/tamarecomp/src/hw.c scripts/trace-rom-sprites.c -o /tmp/trace-p1
+cc -O0 -DTAMA_TRACING -I/path/to/tamarecomp/include /path/to/p2.c /path/to/tamarecomp/src/hw.c scripts/trace-rom-sprites.c -o /tmp/trace-p2
+/tmp/trace-p1 /path/to/tama.b > /tmp/p1.trace
+/tmp/trace-p2 /path/to/tamag2.bin > /tmp/p2.trace
+python3 scripts/extract-reference.py /path/to/tama.b /path/to/tamag2.bin /tmp/p1.trace /tmp/p2.trace
+```
+
+The standard-library extractor checks both ROM SHA-1s, verifies each trace's ROM fingerprint and requires all 132 terminating traces before replacing the generated `ROM_SPRITES` block. The tracer executes the ROM controller at `0x0465`/`0x0486` and resolves its upper/lower draws at `0x0928`/`0x0939`. Regeneration is deterministic.
 
 ## Character appearance rates
+
+**Historical P1-only sample; these are not current combined P1/P2 appearance rates.**
 
 A simulation of **10,000 complete lives** at [commit `a288353`](https://github.com/taichikuji/trmnl-tamagotchi-plugin/commit/a288353d7c74129507a28acf9389e08d2bc0bf1d) produced the results below. Each life started as a fresh egg and ran until its first death, using the normal automatic caretaker, varied seeds and start times across October 18, 2026 (UTC), and the `Europe/Madrid` time zone.
 

@@ -8,7 +8,8 @@ const root = path.join(__dirname, '..');
 const src = path.join(root, 'TRMNL/src');
 const context = vm.createContext({ Date, Intl });
 vm.runInContext(fs.readFileSync(path.join(src, 'transform.js'), 'utf8'), context);
-const characters = vm.runInContext('P1_NAMES', context);
+const names = vm.runInContext('NAMES', context);
+const characters = [...names.p1, ...names.p2.slice(1, -1), 'p2-egg', 'p2-trmy', 'dead', 'p2-dead'];
 const devices = { og: [800,480], x: [1872,1404], portrait: [1404,1872] };
 const frameworkVersion = '3.4.3';
 const assetRoot = path.join(root, '.cache/framework', frameworkVersion);
@@ -20,12 +21,17 @@ const moods = {
   hungry: 'Hungry', bored: 'Bored', cleaned: 'Fresh and clean', recovering: 'Feeling better',
   scolded: 'Learning manners', 'timezone-unavailable': 'Time zone unavailable',
 };
+for (let action=0; action<11; action++) moods[`rom-${action}`] = `ROM animation ${action}`;
+moods['rom-pose'] = 'All extracted poses';
 const base = Date.parse('2026-10-18T09:00:00Z') / 60000;
 const escape = text => String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function fixture(character = 'trmy', mood = 'awake', seed = 42) {
   const s = context.newLife(seed, base, 'Europe/Madrid');
+  // Fixtures select a family explicitly; actual lives keep their saved family.
+  s.family = character?.startsWith('p2-') || names.p2.slice(1, -1).includes(character) ? 'p2' : 'p1';
+  character = character?.replace(/^p2-/, '');
   s.cursor += 7 * 1440;
-  const index = characters.indexOf(character);
+  const index = names[s.family].indexOf(character);
   s.character = index >= 0 ? index : 5;
   s.hunger = 15; s.happiness = 11; s.activity_until = 0;
   if (character === 'dead') context.die(s, 'Reached the end of this life');
@@ -50,6 +56,16 @@ function render(options = {}, state) {
   const height = layout === 'full' ? dh : (layout === 'half_horizontal' || layout === 'quadrant' ? (lh - 20) / 2 - 5 : lh - 20) * scale;
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
+  if (!options.lifecycle && s.dead_at === null && options.mood?.startsWith('rom-') && s.character < 12) {
+    const family = s.family || 'p1';
+    const tick = Math.max(0, Math.min(511, Math.floor(Number(options.frame) || 0)));
+    if (options.mood === 'rom-pose') {
+      const poses = vm.runInContext('ROM_SPRITES', context)[family].characters[s.character].poses;
+      pet.sprite.frame = tick % poses.length; pet.sprite.path = poses[pet.sprite.frame];
+    } else if (/^rom-(?:[0-9]|10)$/.test(options.mood)) {
+      Object.assign(pet.sprite, context.romFrame(family, s.character, Number(options.mood.slice(4)), tick));
+    }
+  }
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
   // Shared definitions are loaded before the view; render scopes are isolated.
   const sharedSource = fs.readFileSync(path.join(src,'shared.liquid'),'utf8');
@@ -69,8 +85,8 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <div class="toolbar"><div class="heading"><h1>TRMNLGotchi</h1><p>Your nostalgic friend on TRMNL!</p></div>
 <label>Device<select id="device"><option value="og">TRMNL OG · 800 × 480</option><option value="x">TRMNL X · landscape</option><option value="portrait">TRMNL X · portrait</option></select></label>
 <label>Layout<select id="layout">${layouts.map(x=>`<option>${x}</option>`).join('')}</select></label>
-<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${[...characters,'dead'].map(x=>`<option ${x==='trmy'?'selected':''}>${x}</option>`).join('')}</select></label>
-<label>Display state<select id="mood">${Object.entries(moods).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label></div>
+<label>Character<select id="character"><option value="simulation">Seeded lifecycle</option>${characters.map(x=>`<option ${x==='trmy'?'selected':''}>${x}</option>`).join('')}</select></label>
+<label>Display state<select id="mood">${Object.entries(moods).map(([value,label])=>`<option value="${value}">${label}</option>`).join('')}</select></label><label>ROM pose / tick<input id="frame" type="number" min="0" max="511" value="0"></label></div>
 <div class="simulation"><span id="caption">Artwork preview. Choose Seeded lifecycle to watch a real simulation.</span><button id="step15">+15 minutes</button><button id="step360">+6 hours</button><button id="step1440">+1 day</button><button id="reset">New seed</button></div>
 <main class="preview-wrap"><div class="preview-frame" id="holder"><iframe id="screen" title="TRMNL display"></iframe></div></main>
 <details><summary>Saved state and recent events</summary><pre id="state"></pre></details>
@@ -78,8 +94,8 @@ const app = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="vi
 <script>
 let saved,dimensions,seed=42;const $=id=>document.getElementById(id);
 function resize(){if(!dimensions)return;const scale=Math.min(1,(innerWidth-58)/dimensions.width,(innerHeight-255)/dimensions.height);$('holder').style.width=dimensions.width*scale+'px';$('holder').style.height=dimensions.height*scale+'px';$('screen').style.width=dimensions.width+'px';$('screen').style.height=dimensions.height+'px';$('screen').style.transform='scale('+scale+')'}
-async function update(minutes=0,reset=false){const lifecycle=$('character').value==='simulation';const response=await fetch('/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:$('device').value,layout:$('layout').value,character:$('character').value,mood:$('mood').value,lifecycle,minutes,state:reset?null:saved,seed})});if(!response.ok){$('caption').textContent=await response.text();return}const data=await response.json();if(lifecycle)saved=data.state;dimensions=data;$('screen').srcdoc=data.html;$('state').textContent=JSON.stringify(data.state,null,2);$('caption').textContent=lifecycle?'Simulation: '+data.pet.updated_at+' · '+data.pet.caretaker+' caretaker · '+data.pet.status:'Artwork preview · '+data.pet.name+' · '+data.width+' × '+data.height;resize()}
-for(const id of ['device','layout','character','mood'])$(id).addEventListener('change',()=>update());for(const n of [15,360,1440])$('step'+n).addEventListener('click',()=>{if($('character').value!=='simulation'){$('character').value='simulation'}update(n)});$('reset').addEventListener('click',()=>{seed++;saved=null;$('character').value='simulation';update(0,true)});addEventListener('resize',resize);update();
+async function update(minutes=0,reset=false){const lifecycle=$('character').value==='simulation';const response=await fetch('/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:$('device').value,layout:$('layout').value,character:$('character').value,mood:$('mood').value,frame:$('frame').value,lifecycle,minutes,state:reset?null:saved,seed})});if(!response.ok){$('caption').textContent=await response.text();return}const data=await response.json();if(lifecycle)saved=data.state;dimensions=data;$('screen').srcdoc=data.html;$('state').textContent=JSON.stringify(data.state,null,2);$('caption').textContent=lifecycle?'Simulation: '+data.pet.updated_at+' · '+data.pet.caretaker+' caretaker · '+data.pet.status:'Artwork preview · '+data.pet.name+' · '+data.width+' × '+data.height;resize()}
+for(const id of ['device','layout','character','mood','frame'])$(id).addEventListener('change',()=>update());for(const n of [15,360,1440])$('step'+n).addEventListener('click',()=>{if($('character').value!=='simulation'){$('character').value='simulation'}update(n)});$('reset').addEventListener('click',()=>{seed++;saved=null;$('character').value='simulation';update(0,true)});addEventListener('resize',resize);update();
 </script></html>`;
 function server() {
   return http.createServer(async (req,res) => {
@@ -112,4 +128,4 @@ if(require.main===module) {
   require('node:child_process').execFileSync('python3',[path.join(__dirname,'preview-assets.py'),assetRoot,frameworkVersion],{stdio:'inherit'});
   server().listen(8766,'127.0.0.1',()=>console.log('Preview: http://127.0.0.1:8766'));
 }
-module.exports={render,fixture,server,devices,layouts,moods};
+module.exports={render,fixture,server,devices,layouts,moods,characters};
