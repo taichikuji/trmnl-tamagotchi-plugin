@@ -21,6 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check serverless upload size
+        run: test "$(wc -c < TRMNL/src/transform.js)" -lt 100000
+
       # Integer from /plugin_settings/<ID>/edit; never commit the API key.
       - name: Push plugin via trmnlp
         working-directory: TRMNL

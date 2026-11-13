@@ -28,8 +28,8 @@ for family, rom_path, trace_path, sha1 in zip(
         rows = [[(v >> y) & 1 for v in columns] for y in range(8)]
         return [row[::-1] for row in rows] if descriptor & 128 else rows
 
-    def path(rows):
-        # Horizontal runs preserve exact pixels with much less SVG than one path per pixel.
+    def pixel_runs(rows):
+        # Each horizontal run stores x, y and width; the selected pose becomes SVG at runtime.
         result = []
         for y, row in enumerate(rows):
             x = 0
@@ -41,8 +41,13 @@ for family, rom_path, trace_path, sha1 in zip(
                 while x < len(row) and row[x]:
                     x += 1
                 length = x - start
-                result.append(f'M{start} {y}h{length}v1h-{length}z')
-        return ''.join(result)
+                result.extend((start, y, length))
+        return result
+
+    def path(rows):
+        runs = pixel_runs(rows)
+        return ''.join(f'M{x} {y}h{width}v1h-{width}z'
+                       for x, y, width in zip(runs[::3], runs[1::3], runs[2::3]))
 
     ticks, loops = {}, {}
     trace = pathlib.Path(trace_path).read_text().splitlines()
@@ -71,11 +76,12 @@ for family, rom_path, trace_path, sha1 in zip(
         poses, indices = [], {}
         def pose(pair):
             pixels = tile(pair[0]) + tile(pair[1])
-            svg = path(pixels)
-            if svg not in indices:
-                indices[svg] = len(poses)
-                poses.append(svg)
-            return indices[svg]
+            runs = pixel_runs(pixels)
+            key = tuple(runs)
+            if key not in indices:
+                indices[key] = len(poses)
+                poses.append(runs)
+            return indices[key]
         # Keep every canonical table pose, including poses selected outside the controller.
         upper = 0xc00 + (words[0xc00 + c] & 255)
         lower = 0xd00 + (words[0xd00 + c] & 255)

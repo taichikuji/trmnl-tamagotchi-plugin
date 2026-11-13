@@ -5,10 +5,30 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { fixture, render, devices, layouts, moods, characters } = require('./preview.cjs');
 const context = vm.createContext({ Date, Intl });
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../TRMNL/src/transform.js'), 'utf8'), context);
+const source = fs.readFileSync(path.join(__dirname, '../TRMNL/src/transform.js'), 'utf8');
+vm.runInContext(source, context);
 const art = vm.runInContext('ROM_SPRITES', context);
 const animations = vm.runInContext('ROM_ANIMATIONS', context);
 const clean = value => JSON.parse(JSON.stringify(value));
+
+test('serverless source stays below the 100 KB upload limit', () => {
+  assert.ok(Buffer.byteLength(source) < 100000, `${Buffer.byteLength(source)} bytes`);
+});
+
+test('pixel runs reconstruct SVG exactly and every pose fits its native tile', () => {
+  assert.equal(context.spritePath([]), '');
+  assert.equal(context.spritePath([6, 2, 4, 5, 3, 1]), 'M6 2h4v1h-4zM5 3h1v1h-1z');
+  const poses = Object.values(art).flatMap(family => family.characters.flatMap(character => character.poses.map(runs => [runs, 16])));
+  poses.push(...vm.runInContext('TRMY_SPRITES', context).map(runs => [runs, 32]));
+  for (const [runs, size] of poses) {
+    assert.equal(runs.length % 3, 0);
+    for (let i = 0; i < runs.length; i += 3) {
+      const [x, y, width] = runs.slice(i, i + 3);
+      assert.ok([x, y, width].every(Number.isInteger));
+      assert.ok(x >= 0 && y >= 0 && width > 0 && x + width <= size && y < size);
+    }
+  }
+});
 
 test('every ROM sequence preserves its prefix, holds and loop across repeated cycles', () => {
   for (const family of ['p1', 'p2']) {
@@ -19,14 +39,14 @@ test('every ROM sequence preserves its prefix, holds and loop across repeated cy
         const sequence = animations[id];
         const [prefix, loop] = sequence.map(runs => runs.flatMap(([pose, hold]) => {
           assert.ok(Number.isInteger(hold) && hold > 0);
-          assert.equal(typeof data.poses[pose], 'string');
+          assert.ok(Array.isArray(data.poses[pose]));
           return Array(hold).fill(pose);
         }));
         assert.ok(loop.length);
         const expected = [...prefix, ...loop, ...loop];
         for (const [tick, frame] of expected.entries()) {
           assert.deepEqual(clean(context.romFrame(family, character, action, tick)),
-            { frame, path: data.poses[frame] });
+            { frame, path: context.spritePath(data.poses[frame]) });
         }
       }
     }
