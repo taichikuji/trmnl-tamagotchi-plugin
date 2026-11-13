@@ -75,7 +75,7 @@ TRMY is an alternative perfect-care adult in both families. When an eligible Tam
 
 TRMY has its own entry in the same character, stats, sprites and growth tables. Its hunger drops every **180 awake minutes** and happiness every **210 awake minutes**, compared with Mametchi's 81 and 91. It sleeps **22:00–09:00** in the account time zone, starts fully disciplined, and takes one medicine dose per treatment. Illness and adult aging countdowns are both 4,095 awake minutes, within the original P1 timer ranges. It uses the same cleanup, illness, aging, death and rebirth mechanics as the other pets. Aging eventually accelerates its needs too.
 
-TRMY's eight expressions are complete 32×32 SVG pixel paths in `TRMY_SPRITES`. **Unamused** and **cheerful** alternate at the original 15-minute idle cadence; care states and recent activities select the other expressions:
+TRMY's eight expressions are complete 32×32 pixel poses in `TRMY_SPRITES`. **Unamused** and **cheerful** alternate at the original 15-minute idle cadence; care states and recent activities select the other expressions:
 
 | Expression | When it appears |
 | --- | --- |
@@ -89,7 +89,7 @@ TRMY's eight expressions are complete 32×32 SVG pixel paths in `TRMY_SPRITES`. 
 
 Sleep takes priority over illness, then cleanup, then discipline/empty needs, then activity reactions. Brief meal, play and successful-care reactions remain visible for up to **15 simulated minutes** so a normal refresh can catch them. This display-only extension uses the existing activity timestamp; care timings, random decisions and saved-state fields are unchanged.
 
-Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Poop and discipline indicators reuse the original artwork. TRMY uses the same expressions and stats in both families. The extraction script assembles upper and lower ROM tiles before embedding complete paths; the plugin does not assemble or decode tiles at runtime.
+Only the current expression's path is sent to the display. A `scale(0.5)` transform fits its native detail into the existing 16-unit character tile. Poop and discipline indicators reuse the original artwork. TRMY uses the same expressions and stats in both families. The extraction script assembles upper and lower ROM tiles offline. Complete poses are stored as compact `[x, y, width]` pixel runs; only the selected pose is expanded to SVG at each refresh, keeping the Serverless file below TRMNL's 100 KB upload limit.
 
 Run `node scripts/preview.cjs` from the repository root and select **trmy** or **p2-trmy** in the local preview to inspect it. Production character selection follows care history and evolution.
 
@@ -107,7 +107,7 @@ The supplied P1 and Japanese first-series P2 ROMs each provide **142 distinct co
 
 The supplied ROMs have matching lifecycle/stat tables for these slots, so both families share one care engine and growth chart. Identical animation sequences are stored once; every character retains its complete poses and original timing. SVG paths combine adjacent pixels without changing the artwork. Other P2 editions may have different characters and are not substituted for this ROM.
 
-Run `node scripts/check-rom.cjs` to check animation timing, evolution, family selection, saved-state compatibility and all local preview combinations. These checks do not require ROM files.
+Run `node scripts/check-rom.cjs` to check the 100 KB source budget, pixel runs, animation timing, evolution, family selection, saved-state compatibility and all local preview combinations. These checks do not require ROM files.
 
 TRMNL displays one sampled pose per refresh. Idle uses 15-minute slots; recent care reactions use the existing activity timestamp. This preserves the extracted sequences without requesting rapid e-ink refreshes. Every extracted pose and all eleven action sequences can be inspected in `node scripts/preview.cjs`: choose a character, **All extracted poses** or **ROM animation 0–10**, then change **ROM pose / tick**. Numeric action slots also include sequences unused by passive care; extraction does not add manual care controls.
 

@@ -61,7 +61,7 @@ function render(options = {}, state) {
     const tick = Math.max(0, Math.min(511, Math.floor(Number(options.frame) || 0)));
     if (options.mood === 'rom-pose') {
       const poses = vm.runInContext('ROM_SPRITES', context)[family].characters[s.character].poses;
-      pet.sprite.frame = tick % poses.length; pet.sprite.path = poses[pet.sprite.frame];
+      pet.sprite.frame = tick % poses.length; pet.sprite.path = context.spritePath(poses[pet.sprite.frame]);
     } else if (/^rom-(?:[0-9]|10)$/.test(options.mood)) {
       Object.assign(pet.sprite, context.romFrame(family, s.character, Number(options.mood.slice(4)), tick));
     }
