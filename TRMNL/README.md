@@ -107,6 +107,8 @@ The supplied P1 and Japanese first-series P2 ROMs each provide **142 distinct co
 
 The supplied ROMs have matching lifecycle/stat tables for these slots, so P2 reuses the researched care engine. Other P2 editions may have different characters and are not substituted for this ROM.
 
+Run `node scripts/check-rom.cjs` to check animation timing, evolution, family selection, saved-state compatibility and all local preview combinations. These checks do not require ROM files.
+
 TRMNL displays one sampled pose per refresh. Idle uses 15-minute slots; recent care reactions use the existing activity timestamp. This preserves the extracted sequences without requesting rapid e-ink refreshes. Every extracted pose and all eleven action sequences can be inspected in `node scripts/preview.cjs`: choose a character, **All extracted poses** or **ROM animation 0–10**, then change **ROM pose / tick**. Numeric action slots also include sequences unused by passive care; extraction does not add manual care controls.
 
 ### Reproducing extraction

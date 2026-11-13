@@ -6,7 +6,6 @@ Only Python's standard library is required. No ROM is copied into the project.
 import hashlib
 import json
 import pathlib
-import re
 import struct
 import sys
 
@@ -102,7 +101,7 @@ for family, rom_path, trace_path, sha1 in zip(
             animations.append(groups)
         characters.append({'poses': poses, 'animations': animations})
         pose_count += len(poses)
-    # The egg's fourth table frame is the original regional death sprite.
+    # The egg's fifth table frame is the original regional death sprite.
     icons = {}
     for name, address in (('sleep', 0x17d0), ('poop', 0x16f0)):
         icons[name] = [path([[(words[address + f * 8 + x] >> y) & 1 for x in range(8)]

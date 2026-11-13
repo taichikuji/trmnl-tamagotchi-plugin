@@ -56,13 +56,14 @@ function render(options = {}, state) {
   const height = layout === 'full' ? dh : (layout === 'half_horizontal' || layout === 'quadrant' ? (lh - 20) / 2 - 5 : lh - 20) * scale;
   const s = state || fixture(options.character, options.mood);
   const pet = context.displayPet(s,s.cursor);
-  if (!options.lifecycle && options.mood?.startsWith('rom-') && s.character < 12) {
+  if (!options.lifecycle && s.dead_at === null && options.mood?.startsWith('rom-') && s.character < 12) {
+    const family = s.family || 'p1';
     const tick = Math.max(0, Math.min(511, Math.floor(Number(options.frame) || 0)));
     if (options.mood === 'rom-pose') {
-      const poses = vm.runInContext('ROM_SPRITES', context)[s.family].characters[s.character].poses;
+      const poses = vm.runInContext('ROM_SPRITES', context)[family].characters[s.character].poses;
       pet.sprite.frame = tick % poses.length; pet.sprite.path = poses[pet.sprite.frame];
     } else if (/^rom-(?:[0-9]|10)$/.test(options.mood)) {
-      Object.assign(pet.sprite, context.romFrame(s.family, s.character, Number(options.mood.slice(4)), tick));
+      Object.assign(pet.sprite, context.romFrame(family, s.character, Number(options.mood.slice(4)), tick));
     }
   }
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');

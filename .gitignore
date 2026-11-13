@@ -156,3 +156,4 @@ __pycache__/
 *.local.*
 bin/trmnlp
 .agents/
+/roms/
