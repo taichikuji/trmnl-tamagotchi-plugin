@@ -15,25 +15,42 @@
 
 {% comment %}Render scopes are isolated: callers pass all data, icons and size classes explicitly.{% endcomment %}
 {% comment %}
-  Wallpaper proposal (design notes only).
-
-  Try the centre bands of the P1 checkerboard and P2 swirl from
-  https://github.com/bmarvo/tamagotchi-backgrounds/tree/9acd28233e52931703dd4298998d85f68bd020cc
-  The preview cropped the source PNGs to x 0..360, y 94..267. Use cover sizing
-  on the growing wrapper below so the pattern spans the play area above the stats.
-  Select the pattern by the saved family, with P1 as the fallback for older saves.
-  Aim for sparse dots on 1-bit OG (up to 3 black pixels per 8 x 8) and one
-  pale gray (#eee) on X. Keep a plain backing if the image does not load.
-
-  In the body group, consider drawing the generated white interior path before
-  the existing black body path and under the same transform. The wallpaper
-  should still show in open gaps such as the space between the ears.
-  Check the hosted render on OG and X, including quadrant and portrait.
+  The wallpaper masks use the center bands (x 0..360, y 94..267) of
+  tama_bg_gen1.png and tama_bg_gen2.png from bmarvo/tamagotchi-backgrounds
+  (CC0, commit 9acd28233e52931703dd4298998d85f68bd020cc).
+  A 1.8 px blur followed by a red-minus-blue threshold of 28 removes the
+  print grain. Keep the masks inline so screen renders can work offline.
 {% endcomment %}
+<style>
+  .gotchi-play-area {
+    position: relative;
+    isolation: isolate;
+    --gotchi-wallpaper: url("data:image/png;base64,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");
+  }
+  .gotchi-play-area[data-family="p2"] {
+    --gotchi-wallpaper: url("data:image/png;base64,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");
+  }
+  .gotchi-play-area::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: #eee;
+    mask: var(--gotchi-wallpaper) center / cover no-repeat;
+  }
+  /* Repeat unscaled 1px dots so the pattern stays faint even in a mashup. */
+  :is(.screen--1bit, .screen--2bit) .gotchi-play-area::before {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h1v1H0zM4 0h1v1H4zM4 4h1v1H4z'/%3E%3C/svg%3E") repeat;
+  }
+</style>
+
 {% template pet_content %}
-  <div class="flex flex--center grow w--full">
+  <div class="gotchi-play-area flex flex--center grow w--full" data-family="{{ pet.family | escape }}">
     <svg class="w--full {{ sprite_size | escape }}" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
-      <g transform="{{ pet.sprite.transform | escape }}"><path d="{{ pet.sprite.path | escape }}" fill="currentColor"/></g>
+      <g transform="{{ pet.sprite.transform | escape }}">
+        <path d="{{ pet.sprite.interior_path | escape }}" fill="#fff"/>
+        <path d="{{ pet.sprite.path | escape }}" fill="currentColor"/>
+      </g>
       <g transform="translate(24 1)"><path d="{{ pet.sprite.sleep_path | escape }}" fill="currentColor"/></g>
       <g transform="translate(24 12)"><path d="{{ pet.sprite.poop_path | escape }}" fill="currentColor"/></g>
       <g transform="translate(27 2)"><path d="{{ pet.sprite.discipline_path | escape }}" fill="currentColor"/></g>

@@ -802,13 +802,38 @@ function romFrame(family, character, action, tick) {
     tick -= hold;
   }
 }
-// Wallpaper proposal (design notes only): use the selected pose's pixel runs
-// to generate a separate white interior path. Flood-fill empty pixels from a
-// padded tile boundary with four-way adjacency, then emit only unvisited
-// empty pixels. Use the native 16x16 ROM or 32x32 TRMY grid. All 292 stored
-// poses had enclosed pixels in the preview audit; check special poses visually.
-// Keep the original sprite path and transform, and keep any mask in display
-// output only. Check the 100,000-byte source budget before adding runtime code.
+// Flood the padded exterior so the wallpaper still shows through open gaps.
+function interiorPath(runs, size = 16) {
+  const stride = size + 2;
+  const pixels = new Uint8Array(stride * stride);
+  for (let i = 0; i < runs.length; i += 3) {
+    const [x, y, width] = runs.slice(i, i + 3);
+    const start = (y + 1) * stride + x + 1;
+    pixels.fill(1, start, start + width);
+  }
+  const exterior = [0];
+  pixels[0] = 2;
+  for (const cell of exterior) {
+    // Row wraps only join padding cells that are already connected.
+    for (const next of [cell - 1, cell + 1, cell - stride, cell + stride]) {
+      if (pixels[next] !== 0) continue;
+      pixels[next] = 2;
+      exterior.push(next);
+    }
+  }
+  const inside = [];
+  for (let y = 0; y < size; y++) {
+    const row = (y + 1) * stride + 1;
+    for (let x = 0; x < size; x++) {
+      let width = 0;
+      while (!pixels[row + x + width]) width++;
+      if (!width) continue;
+      inside.push(x, y, width);
+      x += width - 1;
+    }
+  }
+  return spritePath(inside);
+}
 function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailable · sleep uses UTC' : '') {
   const family = s.family || 'p1';
   const art = ROM_SPRITES[family];
@@ -868,6 +893,7 @@ function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailab
   const notice = reminder ||
     (dead ? `New egg in ${Math.max(0, 60 - (s.cursor - s.dead_at))}m` : s.sick ? 'Under the weather' : '');
   return { name: dead ? 'Until next time' : trmy ? 'TRMY' : id[0].toUpperCase() + id.slice(1), character: id,
+    family,
     stage: dead ? 'REBIRTH' : !s.character ? 'EGG' : s.character === 1 ? 'BABY' : s.character === 2 ? 'CHILD' : s.character < 5 ? 'TEEN' : 'ADULT',
     generation: String(s.generation),
     age: age < 60 ? `${age}m` : age < 1440 ? `${Math.floor(age/60)}h ${age%60}m` : `${Math.floor(age/1440)}d ${Math.floor(age%1440/60)}h`,
@@ -879,6 +905,8 @@ function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailab
     // The title-bar logo is already embedded in shared.liquid; don't send it twice.
     sprite: {
       frame, path,
+      interior_path: trmy ? interiorPath(TRMY_SPRITES[frame], 32) :
+        dead ? '' : interiorPath(art.characters[s.character].poses[frame]),
       // Leave a pixel of space beside the original 8×8 poop, without resizing the pet.
       transform: `translate(${8 + (poop ? Math.min(offset, -1) : offset)} 4)${trmy ? ' scale(0.5)' : ''}`,
       sleep_path: s.sleeping && !dead && !trmy && s.character > 0 ? art.sleep[slot % 2] : '',

@@ -59,12 +59,13 @@ function render(options = {}, state) {
   if (!options.lifecycle && s.dead_at === null && options.mood?.startsWith('rom-') && s.character < 12) {
     const family = s.family || 'p1';
     const tick = Math.max(0, Math.min(511, Math.floor(Number(options.frame) || 0)));
+    const poses = vm.runInContext('ROM_SPRITES', context)[family].characters[s.character].poses;
     if (options.mood === 'rom-pose') {
-      const poses = vm.runInContext('ROM_SPRITES', context)[family].characters[s.character].poses;
       pet.sprite.frame = tick % poses.length; pet.sprite.path = context.spritePath(poses[pet.sprite.frame]);
     } else if (/^rom-(?:[0-9]|10)$/.test(options.mood)) {
       Object.assign(pet.sprite, context.romFrame(family, s.character, Number(options.mood.slice(4)), tick));
     }
+    pet.sprite.interior_path = context.interiorPath(poses[pet.sprite.frame]);
   }
   const markup = fs.readFileSync(path.join(src,layout+'.liquid'),'utf8');
   // Shared definitions are loaded before the view; render scopes are isolated.

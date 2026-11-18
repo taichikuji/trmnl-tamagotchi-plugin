@@ -15,6 +15,15 @@ test('serverless source stays below the 100 KB upload limit', () => {
   assert.ok(Buffer.byteLength(source) < 100000, `${Buffer.byteLength(source)} bytes`);
 });
 
+test('wallpaper fill leaves exterior gaps transparent on both sprite grids', () => {
+  const closed = [0, 0, 4, 0, 1, 1, 3, 1, 1, 0, 2, 4];
+  const open = [0, 0, 4, 0, 1, 1, 0, 2, 4];
+  for (const size of [16, 32]) {
+    assert.equal(context.interiorPath(closed, size), 'M1 1h2v1h-2z');
+    assert.equal(context.interiorPath(open, size), '');
+  }
+});
+
 test('pixel runs reconstruct SVG exactly and every pose fits its native tile', () => {
   assert.equal(context.spritePath([]), '');
   assert.equal(context.spritePath([6, 2, 4, 5, 3, 1]), 'M6 2h4v1h-4zM5 3h1v1h-1z');
@@ -173,8 +182,10 @@ test('all characters and care states render in every device and layout without c
     for (const device of Object.keys(devices)) for (const layout of layouts) {
       const result = render({ character, mood, device, layout, frame: 511 }, state);
       assert.equal(typeof result.pet.sprite.path, 'string');
-      assert.ok(!result.html.includes('undefined'));
-      assert.ok(!result.html.includes('NaN'));
+      // Inline image data in CSS can contain these strings by chance.
+      const markup = result.html.replace(/<style>[\s\S]*?<\/style>/g, '');
+      assert.ok(!markup.includes('undefined'));
+      assert.ok(!markup.includes('NaN'));
       assert.equal(JSON.stringify(state), before);
     }
   }
