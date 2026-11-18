@@ -14,6 +14,22 @@
 {%- endcapture -%}
 
 {% comment %}Render scopes are isolated: callers pass all data, icons and size classes explicitly.{% endcomment %}
+{% comment %}
+  Wallpaper proposal (design notes only).
+
+  Try the centre bands of the P1 checkerboard and P2 swirl from
+  https://github.com/bmarvo/tamagotchi-backgrounds/tree/9acd28233e52931703dd4298998d85f68bd020cc
+  The preview cropped the source PNGs to x 0..360, y 94..267. Use cover sizing
+  on the growing wrapper below so the pattern spans the play area above the stats.
+  Select the pattern by the saved family, with P1 as the fallback for older saves.
+  Aim for sparse dots on 1-bit OG (up to 3 black pixels per 8 x 8) and one
+  pale gray (#eee) on X. Keep a plain backing if the image does not load.
+
+  In the body group, consider drawing the generated white interior path before
+  the existing black body path and under the same transform. The wallpaper
+  should still show in open gaps such as the space between the ears.
+  Check the hosted render on OG and X, including quadrant and portrait.
+{% endcomment %}
 {% template pet_content %}
   <div class="flex flex--center grow w--full">
     <svg class="w--full {{ sprite_size | escape }}" viewBox="0 0 32 24" role="img" aria-label="{{ pet.status | escape }}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">

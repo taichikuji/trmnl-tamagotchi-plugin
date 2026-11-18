@@ -802,6 +802,13 @@ function romFrame(family, character, action, tick) {
     tick -= hold;
   }
 }
+// Wallpaper proposal (design notes only): use the selected pose's pixel runs
+// to generate a separate white interior path. Flood-fill empty pixels from a
+// padded tile boundary with four-way adjacency, then emit only unvisited
+// empty pixels. Use the native 16x16 ROM or 32x32 TRMY grid. All 292 stored
+// poses had enclosed pixels in the preview audit; check special poses visually.
+// Keep the original sprite path and transform, and keep any mask in display
+// output only. Check the 100,000-byte source budget before adding runtime code.
 function displayPet(s, now, warning = s.timezone_fallback ? 'Time zone unavailable · sleep uses UTC' : '') {
   const family = s.family || 'p1';
   const art = ROM_SPRITES[family];
