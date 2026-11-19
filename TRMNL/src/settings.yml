@@ -1,6 +1,6 @@
 ---
 name: TRMNLGotchi
-description: Your nostalgic friend on TRMNL!
+description: A retro virtual pet for TRMNL
 icon: media/icon.svg
 strategy: static
 static_data: '{}'
@@ -20,6 +20,15 @@ custom_fields:
   name: About This Plugin
   field_type: author_bio
   category: games,life
-  description: "TRMNLGotchi is a low-maintenance virtual pet for your TRMNL, created by Ivan Perez!<br/>Unofficial fan project, unaffiliated with BANDAI or Bandai Namco; Tamagotchi is a BANDAI trademark."
+  description: >-
+    Raise a retro virtual pet on your TRMNL with TRMNLGotchi. Inspired by the first two
+    generations of handheld virtual pets, your character hatches, eats, plays, sleeps, grows
+    and evolves based on its care history. An automatic caretaker handles the day-to-day
+    routine, so you can enjoy watching your pet without constant button presses or a separate
+    phone app. Food, happiness, age, evolution stage and generation are shown on the screen.
+    Each installation keeps its own saved progress, and sleep follows your TRMNL account time
+    zone. No external account or API key is required. TRMNLGotchi is an unofficial fan
+    project created by Ivan Perez, not affiliated with BANDAI or Bandai Namco. Tamagotchi is
+    a trademark of BANDAI Co., Ltd.
   github_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin
   learn_more_url: https://github.com/taichikuji/trmnl-tamagotchi-plugin/tree/main/TRMNL#setup
